@@ -79,9 +79,9 @@ const Contact: React.FC = () => {
              <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Contact</h4>
              
              <div className="mb-2 group flex items-center gap-3 w-fit">
-               <a href="mailto:hello@lumina.studio" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">hello@lumina.studio</a>
+               <a href="mailto:flairfactoryfilm@gmail.com" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">flairfactoryfilm@gmail.com</a>
                <button 
-                 onClick={() => handleCopy('hello@lumina.studio', 'email')}
+                 onClick={() => handleCopy('flairfactoryfilm@gmail.com', 'email')}
                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-secondary hover:text-primary"
                  aria-label="Copy Email"
                >
@@ -105,11 +105,10 @@ const Contact: React.FC = () => {
              <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Studio</h4>
              <div className="group flex items-start gap-3 w-fit">
                <address className="text-lg md:text-xl text-primary not-italic font-medium">
-                 123 Creative Ave<br />
-                 New York, NY 10013
+                 서울특별시 강동구 성안로 92 4층
                </address>
                <button 
-                 onClick={() => handleCopy('123 Creative Ave, New York, NY 10013', 'address')}
+                 onClick={() => handleCopy('서울특별시 강동구 성안로 92 4층', 'address')}
                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-secondary hover:text-primary mt-1"
                  aria-label="Copy Address"
                >
