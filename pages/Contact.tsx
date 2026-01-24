@@ -58,7 +58,6 @@ const Contact: React.FC = () => {
   const labelClass = "text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-2 block group-focus-within:text-primary transition-colors";
 
   return (
-    // Layout의 pt-24(96px)를 고려하여 높이 계산. 모바일에서는 높이 제한 해제(min-h-fit)
     <div className="flex flex-col md:flex-row w-full min-h-[calc(100vh-8rem)] animate-fade-in">
       
       {/* Left Panel - Branding & Info */}
@@ -69,7 +68,7 @@ const Contact: React.FC = () => {
             <span className="text-secondary opacity-50">TALK.</span>
           </h1>
           <p className="text-lg md:text-xl text-primary/60 max-w-md font-light leading-relaxed break-keep">
-            비전이 있으신가요?</br>저희가 구체화해 드립니다.
+            비전이 있으신가요?<br />저희가 구체화해 드립니다.
           </p>
         </div>
 
@@ -89,9 +88,9 @@ const Contact: React.FC = () => {
              </div>
 
              <div className="group flex items-center gap-3 w-fit">
-               <a href="tel:+15550000000" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">+82-2-488-9712</a>
+               <a href="tel:+8224889712" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">+82-2-488-9712</a>
                <button 
-                 onClick={() => handleCopy('+15550000000', 'phone')}
+                 onClick={() => handleCopy('+82-2-488-9712', 'phone')}
                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-secondary hover:text-primary"
                  aria-label="Copy Phone"
                >
@@ -119,7 +118,6 @@ const Contact: React.FC = () => {
       </div>
 
       {/* Right Panel - Form */}
-      {/* absolute 제거하고 flex로 변경하여 겹침 방지 */}
       <div className={`w-full md:w-1/2 flex flex-col justify-center transition-colors duration-500 ease-in-out ${isButtonHovered ? 'bg-surface' : 'bg-surface/30'}`}>
         <div className="w-full h-full p-6 md:p-12 lg:p-16 flex flex-col justify-center relative">
           
