@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // Supabase Client
 import { 
   getProjects, 
   getContacts, 
@@ -8,16 +9,19 @@ import {
   getAllTags,
   renameTag,
   addTag,
-  deleteTag
+  deleteTag,
+  uploadImage // 이미지 업로드 함수 추가됨
 } from '../services/dataService';
 import { Project } from '../types';
 import { 
   Shield, Plus, Edit2, Trash2, Mail, LayoutGrid, Tags, 
-  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine
+  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2
 } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  
   // Reordered Tabs
   const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries'>('works');
   
@@ -29,7 +33,10 @@ const Admin: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  // Initialize images as empty array if undefined
+  
+  // Upload State
+  const [isUploading, setIsUploading] = useState(false);
+
   const [currentProject, setCurrentProject] = useState<Partial<Project>>({
     industry_tags: [],
     type_tags: [],
@@ -46,11 +53,11 @@ const Admin: React.FC = () => {
   // Delete Alert State
   const [deleteAlert, setDeleteAlert] = useState<{ isOpen: boolean, projectId: string | null }>({ isOpen: false, projectId: null });
 
-  // Simple Mock Login
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAuthenticated(true);
-  };
+  // Login Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // --- Auth & Initial Data ---
 
   const refreshData = () => {
     getProjects().then(setProjects);
@@ -59,12 +66,40 @@ const Admin: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshData();
-    }
-  }, [isAuthenticated]);
+    // 1. 초기 세션 확인
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsLoadingAuth(false);
+      if (session) refreshData();
+    });
 
-  // Handlers
+    // 2. 로그인 상태 변경 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) refreshData();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert("로그인 실패: " + error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // --- Handlers ---
+
   const handleEditClick = (project: Project) => {
     setCurrentProject({ ...project, images: project.images || [] });
     setModalMode('edit');
@@ -101,38 +136,52 @@ const Admin: React.FC = () => {
   const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Ensure we have a thumbnail. If not, pick the first image.
+    // 썸네일 방어 코드: 썸네일이 없으면 첫 번째 이미지를 썸네일로
     const submission = { ...currentProject };
     if (!submission.thumbnail_url && submission.images && submission.images.length > 0) {
       submission.thumbnail_url = submission.images[0];
     }
 
-    if (modalMode === 'add') {
-      await createProject(submission as Project);
-    } else {
-      await updateProject(submission as Project);
+    try {
+      if (modalMode === 'add') {
+        await createProject(submission as Project);
+      } else {
+        await updateProject(submission as Project);
+      }
+      setIsModalOpen(false);
+      refreshData();
+    } catch (error: any) {
+      alert("저장 실패: " + error.message);
     }
-    setIsModalOpen(false);
-    refreshData();
   };
 
-  // --- Image Handling ---
+  // --- Image Handling (Modified for Real Upload) ---
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      // Create Object URLs for preview (simulating upload)
-      const newImages = Array.from(e.target.files).map(file => URL.createObjectURL(file as Blob));
-      
-      setCurrentProject(prev => {
-        const updatedImages = [...(prev.images || []), ...newImages];
-        // If no thumbnail set, use the first of the new batch
-        const updatedThumb = prev.thumbnail_url || updatedImages[0];
-        return {
-          ...prev,
-          images: updatedImages,
-          thumbnail_url: updatedThumb
-        };
-      });
+      setIsUploading(true);
+      try {
+        const files = Array.from(e.target.files);
+        
+        // uploadImage 함수를 병렬로 실행하여 모든 파일을 Supabase에 업로드
+        const uploadPromises = files.map(file => uploadImage(file));
+        const uploadedUrls = await Promise.all(uploadPromises);
+        
+        setCurrentProject(prev => {
+          const updatedImages = [...(prev.images || []), ...uploadedUrls];
+          // 썸네일이 비어있으면 첫 번째 업로드된 사진을 썸네일로 지정
+          const updatedThumb = prev.thumbnail_url || updatedImages[0];
+          return {
+            ...prev,
+            images: updatedImages,
+            thumbnail_url: updatedThumb
+          };
+        });
+      } catch (error: any) {
+        alert("이미지 업로드 중 오류가 발생했습니다: " + error.message);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -141,8 +190,8 @@ const Admin: React.FC = () => {
       const imgToRemove = prev.images![indexToRemove];
       const newImages = prev.images!.filter((_, i) => i !== indexToRemove);
       
-      // If we removed the thumbnail, reset it to the first image or empty
       let newThumb = prev.thumbnail_url;
+      // 만약 지우는 이미지가 썸네일이었다면, 썸네일을 초기화하거나 첫번째 이미지로 변경
       if (imgToRemove === newThumb) {
         newThumb = newImages.length > 0 ? newImages[0] : '';
       }
@@ -204,7 +253,7 @@ const Admin: React.FC = () => {
   };
 
   const handleDeleteTag = async (tag: string, category: 'industry' | 'type') => {
-    if (confirm(`정말 "${tag}" 태그를 삭제하시겠습니까?\n\n이 태그는 모든 프로젝트에서 제거되지만, 프로젝트 자체는 삭제되지 않습니다.`)) {
+    if (confirm(`정말 "${tag}" 태그를 삭제하시겠습니까?`)) {
       await deleteTag(tag, category);
       refreshData();
     }
@@ -217,6 +266,12 @@ const Admin: React.FC = () => {
       refreshData();
     }
   };
+
+  // --- Loading & Auth Views ---
+
+  if (isLoadingAuth) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32}/></div>;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -231,8 +286,18 @@ const Admin: React.FC = () => {
           </div>
           <div className="space-y-4">
             <input 
+              type="email" 
+              placeholder="Email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-background border border-primary/10 p-3 rounded-lg focus:border-primary outline-none transition-colors text-primary"
+              required
+            />
+             <input 
               type="password" 
-              placeholder="액세스 키 입력" 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-background border border-primary/10 p-3 rounded-lg focus:border-primary outline-none transition-colors text-primary"
               required
             />
@@ -250,8 +315,15 @@ const Admin: React.FC = () => {
 
   return (
     <div className="px-4 md:px-6 py-10 max-w-7xl mx-auto relative min-h-screen">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-        <h1 className="text-3xl font-display font-bold text-primary">Dashboard</h1>
+        <div className="flex items-center gap-4">
+           <h1 className="text-3xl font-display font-bold text-primary">Dashboard</h1>
+           <button onClick={handleLogout} className="text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-1 border border-red-500/20 px-3 py-1 rounded-full hover:bg-red-500/10 transition-colors">
+             <LogOut size={12}/> Logout
+           </button>
+        </div>
+        
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setActiveTab('works')}
@@ -286,35 +358,46 @@ const Admin: React.FC = () => {
             </button>
           </div>
           <div className="grid gap-4">
-            {projects.map(project => (
-              <div key={project.id} className={`bg-surface p-4 rounded-xl border flex flex-col md:flex-row items-center gap-4 group transition-all ${project.is_visible ? 'border-primary/5 hover:border-primary/20' : 'border-red-500/20 opacity-75'}`}>
-                <div className="relative">
-                   <img src={project.thumbnail_url || project.images[0]} alt={project.title} className="w-full md:w-32 h-20 object-cover rounded-lg" />
-                   {!project.is_visible && <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg"><EyeOff size={20} className="text-primary"/></div>}
+            {projects.length === 0 ? (
+                <div className="text-center py-20 bg-surface rounded-xl border border-primary/5 text-secondary">
+                    등록된 프로젝트가 없습니다.
                 </div>
-                
-                <div className="flex-1 text-center md:text-left">
-                  <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
-                  <p className="text-xs text-secondary uppercase tracking-wider">{project.client}</p>
+            ) : (
+                projects.map(project => (
+                <div key={project.id} className={`bg-surface p-4 rounded-xl border flex flex-col md:flex-row items-center gap-4 group transition-all ${project.is_visible ? 'border-primary/5 hover:border-primary/20' : 'border-red-500/20 opacity-75'}`}>
+                    <div className="relative">
+                    {/* 썸네일 안전 처리 */}
+                    <img 
+                        src={project.thumbnail_url || (project.images && project.images[0]) || 'https://via.placeholder.com/150'} 
+                        alt={project.title} 
+                        className="w-full md:w-32 h-20 object-cover rounded-lg bg-neutral-900" 
+                    />
+                    {!project.is_visible && <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg"><EyeOff size={20} className="text-primary"/></div>}
+                    </div>
+                    
+                    <div className="flex-1 text-center md:text-left">
+                    <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
+                    <p className="text-xs text-secondary uppercase tracking-wider">{project.client}</p>
+                    </div>
+                    
+                    <div className="flex gap-2 text-sm text-secondary">
+                    {project.is_featured && <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase">Featured</span>}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                    <button onClick={() => toggleVisibility(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title={project.is_visible ? "숨기기" : "보이기"}>
+                        {project.is_visible ? <Eye size={16}/> : <EyeOff size={16}/>}
+                    </button>
+                    <button onClick={() => handleEditClick(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title="수정">
+                        <Edit2 size={16}/>
+                    </button>
+                    <button onClick={() => handleDeleteClick(project.id)} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
+                        <Trash2 size={16}/>
+                    </button>
+                    </div>
                 </div>
-                
-                <div className="flex gap-2 text-sm text-secondary">
-                  {project.is_featured && <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase">Featured</span>}
-                </div>
-                
-                <div className="flex gap-2">
-                  <button onClick={() => toggleVisibility(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title={project.is_visible ? "숨기기" : "보이기"}>
-                    {project.is_visible ? <Eye size={16}/> : <EyeOff size={16}/>}
-                  </button>
-                  <button onClick={() => handleEditClick(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title="수정">
-                    <Edit2 size={16}/>
-                  </button>
-                  <button onClick={() => handleDeleteClick(project.id)} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
-                    <Trash2 size={16}/>
-                  </button>
-                </div>
-              </div>
-            ))}
+                ))
+            )}
           </div>
         </div>
       )}
@@ -361,6 +444,7 @@ const Admin: React.FC = () => {
             <div className="bg-surface p-6 rounded-xl border border-primary/5">
               <h4 className="text-xs font-bold text-secondary uppercase mb-4">Industry Tags</h4>
               <div className="flex flex-wrap gap-2">
+                {availableTags.industry.length === 0 && <span className="text-secondary text-sm">태그가 없습니다.</span>}
                 {availableTags.industry.map(tag => (
                   <div key={tag} className="group flex items-center gap-2 bg-background border border-primary/10 rounded-full pl-4 pr-1 py-1 transition-all hover:border-primary/30">
                     <span className="text-xs font-bold uppercase tracking-wider text-secondary">{tag}</span>
@@ -389,6 +473,7 @@ const Admin: React.FC = () => {
             <div className="bg-surface p-6 rounded-xl border border-primary/5">
               <h4 className="text-xs font-bold text-secondary uppercase mb-4">Work Type Tags</h4>
               <div className="flex flex-wrap gap-2">
+                {availableTags.type.length === 0 && <span className="text-secondary text-sm">태그가 없습니다.</span>}
                 {availableTags.type.map(tag => (
                   <div key={tag} className="group flex items-center gap-2 bg-background border border-primary/10 rounded-full pl-4 pr-1 py-1 transition-all hover:border-primary/30">
                     <span className="text-xs font-bold uppercase tracking-wider text-secondary">{tag}</span>
@@ -428,7 +513,7 @@ const Admin: React.FC = () => {
                   <th className="pb-4">Email</th>
                   <th className="pb-4">Subject</th>
                   <th className="pb-4">Budget</th>
-                  <th className="pb-4">Status</th>
+                  <th className="pb-4">Message</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
@@ -439,7 +524,7 @@ const Admin: React.FC = () => {
                     <td className="py-4 text-secondary">{contact.email}</td>
                     <td className="py-4"><span className="px-2 py-1 bg-surface rounded text-xs uppercase text-primary">{contact.subject}</span></td>
                     <td className="py-4 text-primary">{contact.budget}</td>
-                    <td className="py-4"><span className="text-green-500 text-xs font-bold uppercase">New</span></td>
+                    <td className="py-4 max-w-xs truncate text-secondary" title={contact.message}>{contact.message}</td>
                   </tr>
                 ))}
               </tbody>
@@ -479,8 +564,9 @@ const Admin: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                 <label className="text-xs uppercase font-bold text-secondary">Vimeo / Video URL</label>
-                 <input className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.video_url || ''} onChange={e => setCurrentProject({...currentProject, video_url: e.target.value})} placeholder="https://vimeo.com/..." />
+                 <label className="text-xs uppercase font-bold text-secondary">Vimeo Video ID (Numbers Only)</label>
+                 <input className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.vimeo_id || ''} onChange={e => setCurrentProject({...currentProject, vimeo_id: e.target.value})} placeholder="예: 375468729" />
+                 <p className="text-[10px] text-secondary">Vimeo 주소 뒷부분 숫자만 입력하세요.</p>
               </div>
 
               {/* Advanced Image Upload & Sorting */}
@@ -491,7 +577,15 @@ const Admin: React.FC = () => {
                 </label>
                 
                 {/* Upload Area */}
-                <div className="border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
+                <div className="relative border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
+                   {isUploading && (
+                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                           <div className="flex flex-col items-center gap-2">
+                               <Loader2 className="animate-spin text-primary" size={24}/>
+                               <span className="text-xs font-bold text-primary">Uploading...</span>
+                           </div>
+                       </div>
+                   )}
                   <input 
                     type="file" 
                     id="image-upload" 
@@ -499,8 +593,9 @@ const Admin: React.FC = () => {
                     accept="image/*" 
                     className="hidden" 
                     onChange={handleImageUpload}
+                    disabled={isUploading}
                   />
-                  <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <label htmlFor="image-upload" className={`cursor-pointer flex flex-col items-center gap-2 ${isUploading ? 'opacity-50' : ''}`}>
                     <Upload size={32} className="text-primary/40" />
                     <span className="text-sm font-bold text-primary">클릭 또는 드래그하여 이미지 업로드</span>
                     <span className="text-xs text-secondary">JPG, PNG, WEBP 지원</span>
@@ -560,6 +655,7 @@ const Admin: React.FC = () => {
                  <div className="space-y-3">
                   <label className="text-xs uppercase font-bold text-secondary">Industry Tags</label>
                   <div className="flex flex-wrap gap-2 p-4 bg-background/50 border border-primary/5 rounded-xl">
+                    {availableTags.industry.length === 0 && <span className="text-xs text-secondary opacity-50">등록된 태그가 없습니다. 상단 Tags 탭에서 추가하세요.</span>}
                     {availableTags.industry.map(tag => (
                       <button
                         type="button"
@@ -579,6 +675,7 @@ const Admin: React.FC = () => {
                 <div className="space-y-3">
                   <label className="text-xs uppercase font-bold text-secondary">Work Type Tags</label>
                   <div className="flex flex-wrap gap-2 p-4 bg-background/50 border border-primary/5 rounded-xl">
+                    {availableTags.type.length === 0 && <span className="text-xs text-secondary opacity-50">등록된 태그가 없습니다. 상단 Tags 탭에서 추가하세요.</span>}
                     {availableTags.type.map(tag => (
                       <button
                         type="button"
