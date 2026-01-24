@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getProjects } from '../services/dataService';
+import { getProjects, getAllTags } from '../services/dataService'; // getAllTags 추가 Import
 import { Project } from '../types';
 import WorkCard from '../components/WorkCard';
 import { Search, X, Filter } from 'lucide-react';
@@ -8,6 +8,10 @@ const Works: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Tag States (DB에서 가져올 전체 태그 목록을 담을 상태)
+  const [availableIndustries, setAvailableIndustries] = useState<string[]>([]);
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
@@ -15,34 +19,35 @@ const Works: React.FC = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getProjects();
-        // Only show visible projects on the public page
-        setProjects(data.filter(p => p.is_visible));
+        setLoading(true);
+        // 프로젝트 목록과 태그 목록을 동시에 가져옵니다.
+        const [projectsData, tagsData] = await Promise.all([
+          getProjects(),
+          getAllTags()
+        ]);
+
+        // 1. 프로젝트 설정 (공개된 것만)
+        setProjects(projectsData.filter(p => p.is_visible));
+        
+        // 2. 태그 목록 설정 (DB에 있는 모든 태그)
+        // 작업물이 없어도 이 태그들은 화면에 표시됩니다.
+        setAvailableIndustries(tagsData.industry);
+        setAvailableTypes(tagsData.type);
+
       } catch (error) {
-        console.error("Failed to load projects", error);
+        console.error("Failed to load data", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProjects();
+    fetchData();
   }, []);
 
-  // Extract unique tags
-  const availableIndustries = useMemo(() => {
-    const tags = new Set<string>();
-    projects.forEach(p => p.industry_tags.forEach(t => tags.add(t)));
-    return Array.from(tags).sort();
-  }, [projects]);
+  // 기존 useMemo로 태그를 추출하던 코드는 삭제됨 (DB 데이터인 availableIndustries, availableTypes 사용)
 
-  const availableTypes = useMemo(() => {
-    const tags = new Set<string>();
-    projects.forEach(p => p.type_tags.forEach(t => tags.add(t)));
-    return Array.from(tags).sort();
-  }, [projects]);
-
-  // Filtering Logic
+  // Filtering Logic (기존과 동일)
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
       // 1. Search Text (Title or Client)
@@ -51,7 +56,7 @@ const Works: React.FC = () => {
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.client.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // 2. Industry Filter (OR logic within group: project must have AT LEAST ONE of the selected industries)
+      // 2. Industry Filter (OR logic within group)
       const matchesIndustry =
         selectedIndustries.length === 0 ||
         p.industry_tags.some(tag => selectedIndustries.includes(tag));
@@ -65,7 +70,7 @@ const Works: React.FC = () => {
     });
   }, [projects, searchQuery, selectedIndustries, selectedTypes]);
 
-  // Handlers
+  // Handlers (기존과 동일)
   const toggleIndustry = (tag: string) => {
     setSelectedIndustries(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -83,8 +88,6 @@ const Works: React.FC = () => {
     setSelectedIndustries([]);
     setSelectedTypes([]);
   };
-
-  const hasActiveFilters = searchQuery || selectedIndustries.length > 0 || selectedTypes.length > 0;
 
   if (loading) {
     return (
@@ -152,6 +155,7 @@ const Works: React.FC = () => {
                     All
                   </button>
                 
+                {/* DB에서 가져온 태그 목록(availableIndustries)을 사용 */}
                 {availableIndustries.map(tag => {
                   const isSelected = selectedIndustries.includes(tag);
                   return (
@@ -197,6 +201,7 @@ const Works: React.FC = () => {
                     All
                   </button>
 
+                {/* DB에서 가져온 태그 목록(availableTypes)을 사용 */}
                 {availableTypes.map(tag => {
                   const isSelected = selectedTypes.includes(tag);
                   return (
