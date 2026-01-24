@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { submitContact } from '../services/dataService';
 import { ContactForm } from '../types';
 import { AlertCircle, ArrowRight, Copy, Check } from 'lucide-react';
+import emailjs from '@emailjs/browser'; // [추가됨] 라이브러리 임포트
 
 const Contact: React.FC = () => {
   const [form, setForm] = useState<ContactForm>({
@@ -17,7 +18,15 @@ const Contact: React.FC = () => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // [추가됨] Vercel 환경 변수 가져오기
+  const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
   useEffect(() => {
+    // [추가됨] EmailJS 초기화
+    if (PUBLIC_KEY) emailjs.init(PUBLIC_KEY);
+
     if (status === 'success') {
       const timer = setTimeout(() => {
         setStatus('idle');
@@ -25,7 +34,7 @@ const Contact: React.FC = () => {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [status]);
+  }, [status, PUBLIC_KEY]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -36,14 +45,35 @@ const Contact: React.FC = () => {
     setStatus('submitting');
     
     try {
+      // 1. Supabase DB 저장
       const result = await submitContact(form);
+      
       if (result.success) {
+        // [추가됨] 2. DB 저장 성공 시 이메일 발송
+        if (SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY) {
+          await emailjs.send(
+            SERVICE_ID,
+            TEMPLATE_ID,
+            {
+              // EmailJS 템플릿 변수와 매칭
+              from_name: form.name,
+              from_email: form.email,
+              message: form.message,
+              budget: form.budget,
+              subject: form.subject || 'Inquiry'
+            }
+          );
+        } else {
+          console.warn('EmailJS keys are missing. Email not sent.');
+        }
+
         setStatus('success');
       } else {
         setStatus('error');
         setErrorMessage(result.error || 'Something went wrong.');
       }
     } catch (err) {
+      console.error(err);
       setStatus('error');
       setErrorMessage('Network error.');
     }
