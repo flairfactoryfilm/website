@@ -90,7 +90,7 @@ const Contact: React.FC = () => {
              </div>
 
              <div className="group flex items-center gap-3 w-fit">
-               <a href="tel:+15550000000" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">+1 (555) 000-0000</a>
+               <a href="tel:+15550000000" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">+82-2-488-9712</a>
                <button 
                  onClick={() => handleCopy('+15550000000', 'phone')}
                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-secondary hover:text-primary"
@@ -102,7 +102,7 @@ const Contact: React.FC = () => {
            </div>
 
            <div>
-             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Studio</h4>
+             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Address</h4>
              <div className="group flex items-start gap-3 w-fit">
                <address className="text-lg md:text-xl text-primary not-italic font-medium">
                  서울특별시 강동구 성안로 92 4층
