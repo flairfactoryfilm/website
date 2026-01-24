@@ -1,8 +1,11 @@
-import { supabase } from '../lib/supabase'; // 경로가 ../lib/supabase 인지 확인해주세요.
+import { supabase } from '../lib/supabase';
 import { Project, ContactForm } from '../types';
 
-// --- Projects (포트폴리오) ---
+// ==========================================
+// 1. Projects (포트폴리오 작업물 관리)
+// ==========================================
 
+// 모든 프로젝트 가져오기 (최신순 정렬)
 export const getProjects = async (): Promise<Project[]> => {
   const { data, error } = await supabase
     .from('projects')
@@ -16,6 +19,7 @@ export const getProjects = async (): Promise<Project[]> => {
   return data || [];
 };
 
+// 특정 ID의 프로젝트 가져오기 (상세 페이지용)
 export const getProjectById = async (id: string): Promise<Project | null> => {
   const { data, error } = await supabase
     .from('projects')
@@ -30,8 +34,9 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
   return data;
 };
 
+// 새 프로젝트 생성
 export const createProject = async (project: Project) => {
-  // id, created_at은 DB에서 자동 생성되므로 제외하고 보냄
+  // DB에서 자동 생성되는 id와 created_at은 제외하고 전송
   const { id, created_at, ...newProject } = project;
   
   const { data, error } = await supabase
@@ -44,34 +49,43 @@ export const createProject = async (project: Project) => {
   return data;
 };
 
+// 기존 프로젝트 수정
 export const updateProject = async (project: Project) => {
   const { error } = await supabase
     .from('projects')
     .update(project)
     .eq('id', project.id);
+
   if (error) throw error;
 };
 
+// 프로젝트 삭제
 export const deleteProject = async (id: string) => {
   const { error } = await supabase
     .from('projects')
     .delete()
     .eq('id', id);
+
   if (error) throw error;
 };
 
-// --- Contacts (문의하기) ---
 
+// ==========================================
+// 2. Contacts (문의하기 관리)
+// ==========================================
+
+// 모든 문의 내역 가져오기 (관리자용)
 export const getContacts = async () => {
   const { data, error } = await supabase
     .from('contacts')
     .select('*')
     .order('created_at', { ascending: false });
+
   if (error) throw error;
   return data || [];
 };
 
-// Contact 페이지에서 사용하는 함수
+// 새 문의 등록하기 (사용자용)
 export const submitContact = async (form: ContactForm) => {
     const { error } = await supabase
         .from('contacts')
@@ -81,8 +95,12 @@ export const submitContact = async (form: ContactForm) => {
     return { success: true };
 };
 
-// --- Tags (태그 관리) ---
 
+// ==========================================
+// 3. Tags (태그 관리)
+// ==========================================
+
+// 모든 태그 가져오기 (카테고리별 분류하여 반환)
 export const getAllTags = async () => {
   const { data, error } = await supabase
     .from('tags')
@@ -93,32 +111,36 @@ export const getAllTags = async () => {
     return { industry: [], type: [] };
   }
 
-  // DB에서 가져온 태그를 카테고리별로 분류
+  // DB의 플랫한 데이터를 UI가 원하는 구조({ industry: [], type: [] })로 변환
   const industry = data?.filter((t: any) => t.category === 'industry').map((t: any) => t.name) || [];
   const type = data?.filter((t: any) => t.category === 'type').map((t: any) => t.name) || [];
 
   return { industry, type };
 };
 
+// 새 태그 추가
 export const addTag = async (name: string, category: 'industry' | 'type') => {
     const { error } = await supabase
         .from('tags')
         .insert([{ name, category }]);
+    
     if(error) console.error('Error adding tag:', error);
 };
 
+// 태그 이름 변경
 export const renameTag = async (oldName: string, newName: string, category: string) => {
-   // 1. 태그 테이블 이름 변경
+   // 태그 테이블에서 이름 변경
+   // (주의: 기존 프로젝트에 저장된 태그 배열 내의 텍스트는 자동으로 바뀌지 않음. 
+   // 완벽한 정합성을 위해서는 프로젝트 테이블도 순회하며 업데이트해야 하지만, 
+   // 여기서는 태그 관리 테이블만 업데이트합니다.)
    await supabase
      .from('tags')
      .update({ name: newName })
      .eq('name', oldName)
      .eq('category', category);
-     
-   // 2. (옵션) 기존 프로젝트들에 저장된 태그 이름도 업데이트 로직이 필요할 수 있음
-   // 복잡성을 줄이기 위해 여기서는 태그 테이블만 수정합니다.
 };
 
+// 태그 삭제
 export const deleteTag = async (name: string, category: string) => {
     await supabase
         .from('tags')
@@ -127,22 +149,26 @@ export const deleteTag = async (name: string, category: string) => {
         .eq('category', category);
 };
 
-// --- Storage (이미지 업로드) ---
-// Admin 페이지에서 이미지를 업로드할 때 사용합니다.
 
+// ==========================================
+// 4. Storage (이미지 업로드)
+// ==========================================
+
+// 이미지 파일을 Supabase Storage에 업로드하고 공개 URL 반환
 export const uploadImage = async (file: File): Promise<string> => {
-  // 파일명 중복 방지를 위해 랜덤 문자열 추가
+  // 파일명 중복 방지를 위한 랜덤 접두사 생성
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const filePath = `${fileName}`; // 폴더 없이 루트에 저장하거나, 'uploads/${fileName}' 처럼 경로 지정 가능
 
+  // 1. Storage 버킷('works')에 파일 업로드
   const { error: uploadError } = await supabase.storage
-    .from('works') // Supabase Storage 버킷 이름
+    .from('works') 
     .upload(filePath, file);
 
   if (uploadError) throw uploadError;
 
-  // 업로드된 이미지의 공개 URL 가져오기
+  // 2. 업로드된 파일의 공개 URL 가져오기
   const { data } = supabase.storage
     .from('works')
     .getPublicUrl(filePath);
