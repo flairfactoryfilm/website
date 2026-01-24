@@ -27,23 +27,23 @@ const Admin: React.FC = () => {
 
   // --- UI State ---
   const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries'>('works');
-  
+   
   // --- Data State ---
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [availableTags, setAvailableTags] = useState<{industry: string[], type: string[]}>({ industry: [], type: [] });
-  
+   
   // --- Modal & Form State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isUploading, setIsUploading] = useState(false);
-  
+   
   const [currentProject, setCurrentProject] = useState<Partial<Project>>({
     industry_tags: [],
     type_tags: [],
     images: [] 
   });
-  
+   
   // Work Date String for Input (YYYY-MM)
   // DB의 'YYYY-MM-DD'를 input type="month"에 맞는 'YYYY-MM'으로 변환해서 관리
   const [workDateInput, setWorkDateInput] = useState('');
@@ -391,7 +391,7 @@ const Admin: React.FC = () => {
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
                       <p className="text-xs text-secondary uppercase tracking-wider">
-                         {project.work_date ? project.work_date.substring(0, 7) : 'Date N/A'} • {project.client}
+                          {project.work_date ? project.work_date.substring(0, 7) : 'Date N/A'} • {project.client}
                       </p>
                     </div>
                     
@@ -553,7 +553,10 @@ const Admin: React.FC = () => {
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-surface w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl border border-primary/10 shadow-2xl flex flex-col animate-slide-up">
+          <div 
+            className="bg-surface w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl border border-primary/10 shadow-2xl flex flex-col animate-slide-up"
+            data-lenis-prevent // 여기 추가했습니다!
+          >
             <div className="flex justify-between items-center p-6 border-b border-primary/5 bg-surface sticky top-0 z-10">
               <h2 className="text-xl font-display font-bold text-primary">{modalMode === 'add' ? '새 작업 추가' : '작업 수정'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-secondary hover:text-primary"><X size={20} /></button>
@@ -684,7 +687,7 @@ const Admin: React.FC = () => {
 
               {/* 5. Tags */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="space-y-3">
+                  <div className="space-y-3">
                   <label className="text-xs uppercase font-bold text-secondary">Industry Tags</label>
                   <div className="flex flex-wrap gap-2 p-4 bg-background/50 border border-primary/5 rounded-xl">
                     {availableTags.industry.length === 0 && <span className="text-xs text-secondary opacity-50">등록된 태그가 없습니다. 상단 Tags 탭에서 추가하세요.</span>}
