@@ -69,8 +69,7 @@ const Contact: React.FC = () => {
             <span className="text-secondary opacity-50">TALK.</span>
           </h1>
           <p className="text-lg md:text-xl text-primary/60 max-w-md font-light leading-relaxed break-keep">
-            비전이 있으신가요? 저희가 구체화해 드립니다. 
-            현재 2024년 4분기 프로젝트 접수 중입니다.
+            비전이 있으신가요?</br>저희가 구체화해 드립니다.
           </p>
         </div>
 
