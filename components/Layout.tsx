@@ -129,9 +129,9 @@ const Layout: React.FC = () => {
           {/* Right: Essential Contact Info */}
           <div className="flex flex-col md:items-end gap-1 text-sm text-secondary">
             {/* 실제 주소/연락처 */}
-            <address className="not-italic">123 Creative Ave, New York, NY 10013</address>
-            <a href="tel:+15550000000" className="hover:text-primary transition-colors">+1 (555) 000-0000</a>
-            <a href="mailto:hello@lumina.studio" className="hover:text-primary transition-colors">hello@lumina.studio</a>
+            <address className="not-italic">서울특별시 강동구 성안로 92 4층</address>
+            <a href="tel:+15550000000" className="hover:text-primary transition-colors">+82-2-488-9712</a>
+            <a href="mailto:hello@lumina.studio" className="hover:text-primary transition-colors">flairfactoryfilm@gmail.com</a>
           </div>
 
         </div>
