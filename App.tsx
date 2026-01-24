@@ -1,0 +1,26 @@
+import React from 'react';
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Works from './pages/Works';
+import WorksDetail from './pages/WorksDetail';
+import Contact from './pages/Contact';
+import Admin from './pages/Admin';
+
+const App: React.FC = () => {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="works" element={<Works />} />
+          <Route path="works/:id" element={<WorksDetail />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="admin" element={<Admin />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
+};
+
+export default App;
