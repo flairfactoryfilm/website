@@ -35,6 +35,15 @@ const WorksDetail: React.FC = () => {
     fetchData();
   }, [id]);
 
+  // 날짜 포맷 변환 함수 (YYYY-MM-DD -> YYYY. MM)
+  const formatWorkDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}. ${month}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -110,7 +119,8 @@ const WorksDetail: React.FC = () => {
                 </div>
                 <div>
                    <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-2">Year</h4>
-                   <p className="text-lg font-bold text-primary">{new Date(project.created_at).getFullYear()}</p>
+                   {/* 수정됨: 등록일 대신 작업 시기(work_date) 표시 */}
+                   <p className="text-lg font-bold text-primary">{formatWorkDate(project.work_date)}</p>
                 </div>
             </div>
 
