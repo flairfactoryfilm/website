@@ -59,26 +59,28 @@ const Contact: React.FC = () => {
   const labelClass = "text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-2 block group-focus-within:text-primary transition-colors";
 
   return (
-    <div className="min-h-screen pt-20 md:pt-0 flex flex-col md:flex-row animate-fade-in">
+    // 수정됨: min-h-screen 유지하되 pt-20 제거 (Layout에서 이미 여백을 줌)
+    <div className="min-h-screen flex flex-col md:flex-row animate-fade-in">
       {/* Left Panel - Branding & Info */}
-      <div className="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col justify-center border-r border-primary/5 relative overflow-hidden">
+      {/* 수정됨: 패딩을 줄여서(p-6 md:p-12) 여백 최소화 */}
+      <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center border-r border-primary/5 relative overflow-hidden">
         
-        <div className="mt-12 md:mt-0 relative z-10">
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-none mb-8 text-primary">
+        <div className="mt-8 md:mt-0 relative z-10">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-none mb-6 text-primary">
             LET'S <br />
             <span className="text-secondary opacity-50">TALK.</span>
           </h1>
-          <p className="text-xl md:text-2xl text-primary/60 max-w-md font-light leading-relaxed break-keep">
+          <p className="text-lg md:text-xl text-primary/60 max-w-md font-light leading-relaxed break-keep">
             비전이 있으신가요? 저희가 구체화해 드립니다. 
             현재 2024년 4분기 프로젝트 접수 중입니다.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 mt-24 relative z-10">
+        <div className="grid grid-cols-1 gap-8 mt-16 relative z-10">
            <div>
-             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-6">Contact</h4>
+             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Contact</h4>
              
-             <div className="mb-4 group flex items-center gap-3 w-fit">
+             <div className="mb-2 group flex items-center gap-3 w-fit">
                <a href="mailto:hello@lumina.studio" className="block text-lg md:text-xl text-primary hover:text-secondary transition-colors font-medium">hello@lumina.studio</a>
                <button 
                  onClick={() => handleCopy('hello@lumina.studio', 'email')}
@@ -102,7 +104,7 @@ const Contact: React.FC = () => {
            </div>
 
            <div>
-             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-6">Studio</h4>
+             <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Studio</h4>
              <div className="group flex items-start gap-3 w-fit">
                <address className="text-lg md:text-xl text-primary not-italic font-medium">
                  123 Creative Ave<br />
@@ -124,7 +126,8 @@ const Contact: React.FC = () => {
       <div 
         className={`w-full md:w-1/2 relative transition-colors duration-500 ease-in-out ${isButtonHovered ? 'bg-surface' : 'bg-surface/30'}`}
       >
-        <div className="absolute inset-0 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+        {/* 수정됨: 폼 컨테이너 패딩 축소 (p-6 md:p-12) */}
+        <div className="absolute inset-0 p-6 md:p-12 flex flex-col justify-center">
           
           {/* Success Overlay */}
           <div 
@@ -145,9 +148,9 @@ const Contact: React.FC = () => {
 
           <form 
             onSubmit={handleSubmit} 
-            className={`space-y-12 max-w-2xl mx-auto w-full transition-opacity duration-300 ${status === 'success' ? 'opacity-0' : 'opacity-100'}`}
+            className={`space-y-8 max-w-2xl mx-auto w-full transition-opacity duration-300 ${status === 'success' ? 'opacity-0' : 'opacity-100'}`}
           >
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="group">
                 <label className={labelClass}>Name <span className="text-red-500">*</span></label>
                 <input
@@ -156,7 +159,7 @@ const Contact: React.FC = () => {
                   required
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full bg-transparent border-b border-primary/20 py-4 text-xl focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
+                  className="w-full bg-transparent border-b border-primary/20 py-3 text-lg focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
                   placeholder="홍길동"
                 />
               </div>
@@ -168,7 +171,7 @@ const Contact: React.FC = () => {
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full bg-transparent border-b border-primary/20 py-4 text-xl focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
+                  className="w-full bg-transparent border-b border-primary/20 py-3 text-lg focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
                   placeholder="hello@example.com"
                 />
               </div>
@@ -181,7 +184,7 @@ const Contact: React.FC = () => {
                   value={form.message}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full bg-transparent border-b border-primary/20 py-4 text-xl focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 resize-none text-primary"
+                  className="w-full bg-transparent border-b border-primary/20 py-3 text-lg focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 resize-none text-primary"
                   placeholder="프로젝트에 대해 알려주세요..."
                 />
               </div>
@@ -193,7 +196,7 @@ const Contact: React.FC = () => {
                   name="budget"
                   value={form.budget}
                   onChange={handleChange}
-                  className="w-full bg-transparent border-b border-primary/20 py-4 text-xl focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
+                  className="w-full bg-transparent border-b border-primary/20 py-3 text-lg focus:border-primary focus:outline-none transition-all placeholder:text-primary/10 text-primary"
                   placeholder="대략적인 예산을 기재해주세요."
                 />
               </div>
@@ -206,7 +209,7 @@ const Contact: React.FC = () => {
               </div>
             )}
 
-            <div className="pt-8">
+            <div className="pt-6">
               <button
                 type="submit"
                 disabled={status === 'submitting'}
@@ -215,8 +218,8 @@ const Contact: React.FC = () => {
                 className="group w-full flex items-center justify-between text-2xl md:text-3xl font-display font-bold text-primary border-b border-primary/20 pb-4 hover:border-primary transition-all disabled:opacity-50 cursor-pointer"
               >
                 <span>{status === 'submitting' ? '처리 중...' : '문의하기'}</span>
-                <span className="w-12 h-12 rounded-full border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:text-background transition-all">
-                   <ArrowRight className="w-6 h-6 transform group-hover:-rotate-45 transition-transform duration-300" />
+                <span className="w-10 h-10 rounded-full border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:text-background transition-all">
+                   <ArrowRight className="w-5 h-5 transform group-hover:-rotate-45 transition-transform duration-300" />
                 </span>
               </button>
             </div>
