@@ -2,6 +2,7 @@ export interface Project {
   id: string;
   title: string;
   client: string;
+  work_date: string;        // 실제 작업 시기 (YYYY-MM-DD) - 새로 추가됨
   vimeo_id?: string;        // Optional
   video_url?: string;       // Optional
   thumbnail_url?: string;   // Optional (DB에서 null일 경우 에러 방지)
