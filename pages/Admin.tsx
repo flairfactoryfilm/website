@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase'; // Supabase Client
+import { supabase } from '../lib/supabase';
 import { 
   getProjects, 
   getContacts, 
@@ -10,7 +10,7 @@ import {
   renameTag,
   addTag,
   deleteTag,
-  uploadImage // 이미지 업로드 함수 추가됨
+  uploadImage
 } from '../services/dataService';
 import { Project } from '../types';
 import { 
@@ -19,45 +19,42 @@ import {
 } from 'lucide-react';
 
 const Admin: React.FC = () => {
+  // --- Auth State ---
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  
-  // Reordered Tabs
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // --- UI State ---
   const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries'>('works');
   
-  // Data State
+  // --- Data State ---
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [availableTags, setAvailableTags] = useState<{industry: string[], type: string[]}>({ industry: [], type: [] });
   
-  // Modal State
+  // --- Modal & Form State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  
-  // Upload State
   const [isUploading, setIsUploading] = useState(false);
-
+  
   const [currentProject, setCurrentProject] = useState<Partial<Project>>({
     industry_tags: [],
     type_tags: [],
     images: [] 
   });
   
-  // Tag Management State
+  // --- Tag Management State ---
   const [newTagInput, setNewTagInput] = useState('');
   const [tagCategory, setTagCategory] = useState<'industry' | 'type'>('industry');
 
-  // Drag and Drop State for Images
+  // --- Drag and Drop State ---
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
 
-  // Delete Alert State
+  // --- Alert State ---
   const [deleteAlert, setDeleteAlert] = useState<{ isOpen: boolean, projectId: string | null }>({ isOpen: false, projectId: null });
 
-  // Login Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  // --- Auth & Initial Data ---
+  // --- Initialization ---
 
   const refreshData = () => {
     getProjects().then(setProjects);
@@ -66,14 +63,14 @@ const Admin: React.FC = () => {
   };
 
   useEffect(() => {
-    // 1. 초기 세션 확인
+    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
       setIsLoadingAuth(false);
       if (session) refreshData();
     });
 
-    // 2. 로그인 상태 변경 감지
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       if (session) refreshData();
@@ -81,6 +78,8 @@ const Admin: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // --- Auth Handlers ---
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +97,7 @@ const Admin: React.FC = () => {
     await supabase.auth.signOut();
   };
 
-  // --- Handlers ---
+  // --- Project Handlers ---
 
   const handleEditClick = (project: Project) => {
     setCurrentProject({ ...project, images: project.images || [] });
@@ -136,7 +135,7 @@ const Admin: React.FC = () => {
   const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 썸네일 방어 코드: 썸네일이 없으면 첫 번째 이미지를 썸네일로
+    // Thumbnail fallback logic
     const submission = { ...currentProject };
     if (!submission.thumbnail_url && submission.images && submission.images.length > 0) {
       submission.thumbnail_url = submission.images[0];
@@ -155,7 +154,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  // --- Image Handling (Modified for Real Upload) ---
+  // --- Image Handling (Real Upload) ---
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -163,13 +162,12 @@ const Admin: React.FC = () => {
       try {
         const files = Array.from(e.target.files);
         
-        // uploadImage 함수를 병렬로 실행하여 모든 파일을 Supabase에 업로드
+        // Upload all files in parallel
         const uploadPromises = files.map(file => uploadImage(file));
         const uploadedUrls = await Promise.all(uploadPromises);
         
         setCurrentProject(prev => {
           const updatedImages = [...(prev.images || []), ...uploadedUrls];
-          // 썸네일이 비어있으면 첫 번째 업로드된 사진을 썸네일로 지정
           const updatedThumb = prev.thumbnail_url || updatedImages[0];
           return {
             ...prev,
@@ -191,7 +189,6 @@ const Admin: React.FC = () => {
       const newImages = prev.images!.filter((_, i) => i !== indexToRemove);
       
       let newThumb = prev.thumbnail_url;
-      // 만약 지우는 이미지가 썸네일이었다면, 썸네일을 초기화하거나 첫번째 이미지로 변경
       if (imgToRemove === newThumb) {
         newThumb = newImages.length > 0 ? newImages[0] : '';
       }
@@ -203,6 +200,8 @@ const Admin: React.FC = () => {
   const setAsCover = (url: string) => {
     setCurrentProject(prev => ({ ...prev, thumbnail_url: url }));
   };
+
+  // --- Drag and Drop Handlers ---
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedImageIndex(index);
@@ -227,7 +226,7 @@ const Admin: React.FC = () => {
     setDraggedImageIndex(null);
   };
 
-  // --- Tag Handling in Modal ---
+  // --- Tag Handlers ---
 
   const toggleModalTag = (tag: string, category: 'industry' | 'type') => {
     setCurrentProject(prev => {
@@ -241,8 +240,6 @@ const Admin: React.FC = () => {
         : { ...prev, type_tags: newTags };
     });
   };
-
-  // --- Tag Management Tab Handlers ---
 
   const handleAddTag = async () => {
     if (newTagInput.trim()) {
@@ -267,12 +264,13 @@ const Admin: React.FC = () => {
     }
   };
 
-  // --- Loading & Auth Views ---
+  // --- Render Views ---
 
   if (isLoadingAuth) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32}/></div>;
   }
 
+  // 1. Login View
   if (!isAuthenticated) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -282,7 +280,7 @@ const Admin: React.FC = () => {
               <Shield size={24} />
             </div>
             <h2 className="text-2xl font-display font-bold text-primary">Admin Portal</h2>
-            <p className="text-secondary text-sm">콘텐츠 관리를 위해 접속 정보를 입력하세요.</p>
+            <p className="text-secondary text-sm">Supabase 계정으로 로그인하세요.</p>
           </div>
           <div className="space-y-4">
             <input 
@@ -293,7 +291,7 @@ const Admin: React.FC = () => {
               className="w-full bg-background border border-primary/10 p-3 rounded-lg focus:border-primary outline-none transition-colors text-primary"
               required
             />
-             <input 
+            <input 
               type="password" 
               placeholder="Password" 
               value={password}
@@ -313,6 +311,7 @@ const Admin: React.FC = () => {
     );
   }
 
+  // 2. Dashboard View
   return (
     <div className="px-4 md:px-6 py-10 max-w-7xl mx-auto relative min-h-screen">
       {/* Header */}
@@ -346,7 +345,7 @@ const Admin: React.FC = () => {
         </div>
       </div>
 
-      {/* Works Tab */}
+      {/* Tab Content: Works */}
       {activeTab === 'works' && (
         <div className="animate-fade-in">
           <div className="flex justify-end mb-4">
@@ -360,40 +359,39 @@ const Admin: React.FC = () => {
           <div className="grid gap-4">
             {projects.length === 0 ? (
                 <div className="text-center py-20 bg-surface rounded-xl border border-primary/5 text-secondary">
-                    등록된 프로젝트가 없습니다.
+                    등록된 프로젝트가 없습니다. (Supabase DB가 비어있음)
                 </div>
             ) : (
                 projects.map(project => (
                 <div key={project.id} className={`bg-surface p-4 rounded-xl border flex flex-col md:flex-row items-center gap-4 group transition-all ${project.is_visible ? 'border-primary/5 hover:border-primary/20' : 'border-red-500/20 opacity-75'}`}>
                     <div className="relative">
-                    {/* 썸네일 안전 처리 */}
-                    <img 
+                      <img 
                         src={project.thumbnail_url || (project.images && project.images[0]) || 'https://via.placeholder.com/150'} 
                         alt={project.title} 
                         className="w-full md:w-32 h-20 object-cover rounded-lg bg-neutral-900" 
-                    />
-                    {!project.is_visible && <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg"><EyeOff size={20} className="text-primary"/></div>}
+                      />
+                      {!project.is_visible && <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg"><EyeOff size={20} className="text-primary"/></div>}
                     </div>
                     
                     <div className="flex-1 text-center md:text-left">
-                    <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
-                    <p className="text-xs text-secondary uppercase tracking-wider">{project.client}</p>
+                      <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
+                      <p className="text-xs text-secondary uppercase tracking-wider">{project.client}</p>
                     </div>
                     
                     <div className="flex gap-2 text-sm text-secondary">
-                    {project.is_featured && <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase">Featured</span>}
+                      {project.is_featured && <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase">Featured</span>}
                     </div>
                     
                     <div className="flex gap-2">
-                    <button onClick={() => toggleVisibility(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title={project.is_visible ? "숨기기" : "보이기"}>
+                      <button onClick={() => toggleVisibility(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title={project.is_visible ? "숨기기" : "보이기"}>
                         {project.is_visible ? <Eye size={16}/> : <EyeOff size={16}/>}
-                    </button>
-                    <button onClick={() => handleEditClick(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title="수정">
+                      </button>
+                      <button onClick={() => handleEditClick(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title="수정">
                         <Edit2 size={16}/>
-                    </button>
-                    <button onClick={() => handleDeleteClick(project.id)} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
+                      </button>
+                      <button onClick={() => handleDeleteClick(project.id)} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
                         <Trash2 size={16}/>
-                    </button>
+                      </button>
                     </div>
                 </div>
                 ))
@@ -402,10 +400,9 @@ const Admin: React.FC = () => {
         </div>
       )}
 
-      {/* Tags Tab */}
+      {/* Tab Content: Tags */}
       {activeTab === 'tags' && (
         <div className="animate-fade-in space-y-8">
-           {/* Add Tag Section */}
            <div className="bg-surface p-6 rounded-xl border border-primary/5">
              <h3 className="font-bold text-lg mb-4 text-primary">태그 관리</h3>
              <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -501,7 +498,7 @@ const Admin: React.FC = () => {
         </div>
       )}
 
-      {/* Inquiries Tab */}
+      {/* Tab Content: Inquiries */}
       {activeTab === 'inquiries' && (
         <div className="animate-fade-in">
           <div className="overflow-x-auto">
