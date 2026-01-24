@@ -5,12 +5,13 @@ import { Project, ContactForm } from '../types';
 // 1. Projects (포트폴리오 작업물 관리)
 // ==========================================
 
-// 모든 프로젝트 가져오기 (최신순 정렬)
+// 모든 프로젝트 가져오기 (작업 시기 최신순 정렬)
 export const getProjects = async (): Promise<Project[]> => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
-    .order('created_at', { ascending: false });
+    // 변경됨: created_at -> work_date 기준으로 내림차순 정렬
+    .order('work_date', { ascending: false });
   
   if (error) {
     console.error('Error fetching projects:', error);
@@ -130,9 +131,6 @@ export const addTag = async (name: string, category: 'industry' | 'type') => {
 // 태그 이름 변경
 export const renameTag = async (oldName: string, newName: string, category: string) => {
    // 태그 테이블에서 이름 변경
-   // (주의: 기존 프로젝트에 저장된 태그 배열 내의 텍스트는 자동으로 바뀌지 않음. 
-   // 완벽한 정합성을 위해서는 프로젝트 테이블도 순회하며 업데이트해야 하지만, 
-   // 여기서는 태그 관리 테이블만 업데이트합니다.)
    await supabase
      .from('tags')
      .update({ name: newName })
@@ -159,7 +157,7 @@ export const uploadImage = async (file: File): Promise<string> => {
   // 파일명 중복 방지를 위한 랜덤 접두사 생성
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-  const filePath = `${fileName}`; // 폴더 없이 루트에 저장하거나, 'uploads/${fileName}' 처럼 경로 지정 가능
+  const filePath = `${fileName}`; 
 
   // 1. Storage 버킷('works')에 파일 업로드
   const { error: uploadError } = await supabase.storage
