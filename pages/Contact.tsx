@@ -17,7 +17,6 @@ const Contact: React.FC = () => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Auto-dismiss success message after 2 seconds
   useEffect(() => {
     if (status === 'success') {
       const timer = setTimeout(() => {
@@ -59,13 +58,12 @@ const Contact: React.FC = () => {
   const labelClass = "text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-2 block group-focus-within:text-primary transition-colors";
 
   return (
-    // 수정됨: min-h-screen 유지하되 pt-20 제거 (Layout에서 이미 여백을 줌)
-    <div className="min-h-screen flex flex-col md:flex-row animate-fade-in">
+    // Layout의 pt-24(96px)를 고려하여 높이 계산. 모바일에서는 높이 제한 해제(min-h-fit)
+    <div className="flex flex-col md:flex-row w-full min-h-[calc(100vh-8rem)] animate-fade-in">
+      
       {/* Left Panel - Branding & Info */}
-      {/* 수정됨: 패딩을 줄여서(p-6 md:p-12) 여백 최소화 */}
-      <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center border-r border-primary/5 relative overflow-hidden">
-        
-        <div className="mt-8 md:mt-0 relative z-10">
+      <div className="w-full md:w-1/2 p-6 md:p-12 lg:p-16 flex flex-col justify-center border-r border-primary/5">
+        <div className="relative z-10">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-none mb-6 text-primary">
             LET'S <br />
             <span className="text-secondary opacity-50">TALK.</span>
@@ -76,7 +74,7 @@ const Contact: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 mt-16 relative z-10">
+        <div className="grid grid-cols-1 gap-8 mt-12 md:mt-16 relative z-10">
            <div>
              <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Contact</h4>
              
@@ -123,11 +121,9 @@ const Contact: React.FC = () => {
       </div>
 
       {/* Right Panel - Form */}
-      <div 
-        className={`w-full md:w-1/2 relative transition-colors duration-500 ease-in-out ${isButtonHovered ? 'bg-surface' : 'bg-surface/30'}`}
-      >
-        {/* 수정됨: 폼 컨테이너 패딩 축소 (p-6 md:p-12) */}
-        <div className="absolute inset-0 p-6 md:p-12 flex flex-col justify-center">
+      {/* absolute 제거하고 flex로 변경하여 겹침 방지 */}
+      <div className={`w-full md:w-1/2 flex flex-col justify-center transition-colors duration-500 ease-in-out ${isButtonHovered ? 'bg-surface' : 'bg-surface/30'}`}>
+        <div className="w-full h-full p-6 md:p-12 lg:p-16 flex flex-col justify-center relative">
           
           {/* Success Overlay */}
           <div 
@@ -148,7 +144,7 @@ const Contact: React.FC = () => {
 
           <form 
             onSubmit={handleSubmit} 
-            className={`space-y-8 max-w-2xl mx-auto w-full transition-opacity duration-300 ${status === 'success' ? 'opacity-0' : 'opacity-100'}`}
+            className={`space-y-8 max-w-xl mx-auto w-full transition-opacity duration-300 ${status === 'success' ? 'opacity-0' : 'opacity-100'}`}
           >
             <div className="space-y-6">
               <div className="group">
