@@ -102,7 +102,7 @@ const Works: React.FC = () => {
       {/* Header Section */}
       <div className="mb-8 pt-6">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-8">
-          <h2 className="text-4xl md:text-6xl font-display font-bold text-primary">SELECTED WORKS</h2>
+          <h2 className="text-4xl md:text-6xl font-display font-bold text-primary">Selected Works</h2>
           <span className="text-secondary text-sm uppercase tracking-widest hidden md:block">
             {filteredProjects.length} Projects Found
           </span>
