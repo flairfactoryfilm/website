@@ -76,6 +76,23 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+
+      /* --- [추가됨] Lenis 스무스 스크롤 필수 CSS --- */
+      html.lenis, html.lenis body {
+        height: auto;
+      }
+      .lenis.lenis-smooth {
+        scroll-behavior: auto !important;
+      }
+      .lenis.lenis-smooth [data-lenis-prevent] {
+        overscroll-behavior: contain;
+      }
+      .lenis.lenis-stopped {
+        overflow: hidden;
+      }
+      .lenis.lenis-scrolling iframe {
+        pointer-events: none;
+      }
     </style>
   <script type="importmap">
 {
@@ -85,11 +102,11 @@
     "react": "https://esm.sh/react@^19.2.3",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "lenis": "https://esm.sh/lenis@1.1.18"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
