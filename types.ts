@@ -2,23 +2,23 @@ export interface Project {
   id: string;
   title: string;
   client: string;
-  vimeo_id?: string;
-  video_url?: string;
-  thumbnail_url: string;
-  images: string[]; // Array of image URLs for the gallery
+  vimeo_id?: string;        // Optional
+  video_url?: string;       // Optional
+  thumbnail_url?: string;   // Optional (DB에서 null일 경우 에러 방지)
+  images: string[];
   industry_tags: string[];
   type_tags: string[];
   is_featured: boolean;
   is_visible: boolean;
   created_at: string;
-  description?: string;
+  description?: string;     // Optional
 }
 
 export interface ContactForm {
   name: string;
   email: string;
-  subject: string;
-  budget: string;
+  subject?: string;         // Optional (DB 스키마에 따라 선택 사항일 수 있음)
+  budget?: string;          // Optional
   message: string;
 }
 
