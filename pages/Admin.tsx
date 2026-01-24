@@ -15,7 +15,7 @@ import {
 import { Project } from '../types';
 import { 
   Shield, Plus, Edit2, Trash2, Mail, LayoutGrid, Tags, 
-  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2
+  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar
 } from 'lucide-react';
 
 const Admin: React.FC = () => {
@@ -44,6 +44,10 @@ const Admin: React.FC = () => {
     images: [] 
   });
   
+  // Work Date String for Input (YYYY-MM)
+  // DB의 'YYYY-MM-DD'를 input type="month"에 맞는 'YYYY-MM'으로 변환해서 관리
+  const [workDateInput, setWorkDateInput] = useState('');
+
   // --- Tag Management State ---
   const [newTagInput, setNewTagInput] = useState('');
   const [tagCategory, setTagCategory] = useState<'industry' | 'type'>('industry');
@@ -101,6 +105,8 @@ const Admin: React.FC = () => {
 
   const handleEditClick = (project: Project) => {
     setCurrentProject({ ...project, images: project.images || [] });
+    // YYYY-MM-DD -> YYYY-MM 변환
+    setWorkDateInput(project.work_date ? project.work_date.substring(0, 7) : '');
     setModalMode('edit');
     setIsModalOpen(true);
   };
@@ -111,6 +117,8 @@ const Admin: React.FC = () => {
       industry_tags: [], type_tags: [], is_featured: false, is_visible: true, description: '',
       images: []
     });
+    // 오늘 날짜 기준 YYYY-MM 설정
+    setWorkDateInput(new Date().toISOString().substring(0, 7));
     setModalMode('add');
     setIsModalOpen(true);
   };
@@ -139,6 +147,13 @@ const Admin: React.FC = () => {
     const submission = { ...currentProject };
     if (!submission.thumbnail_url && submission.images && submission.images.length > 0) {
       submission.thumbnail_url = submission.images[0];
+    }
+    
+    // YYYY-MM -> YYYY-MM-01 (DB 저장을 위해 1일로 고정)
+    if (workDateInput) {
+      submission.work_date = `${workDateInput}-01`;
+    } else {
+      submission.work_date = new Date().toISOString().split('T')[0]; // 없으면 오늘
     }
 
     try {
@@ -375,7 +390,9 @@ const Admin: React.FC = () => {
                     
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
-                      <p className="text-xs text-secondary uppercase tracking-wider">{project.client}</p>
+                      <p className="text-xs text-secondary uppercase tracking-wider">
+                         {project.work_date ? project.work_date.substring(0, 7) : 'Date N/A'} • {project.client}
+                      </p>
                     </div>
                     
                     <div className="flex gap-2 text-sm text-secondary">
@@ -543,30 +560,48 @@ const Admin: React.FC = () => {
             </div>
             
             <form onSubmit={handleModalSubmit} className="p-6 space-y-8">
-              {/* Basic Info */}
+              {/* 1. Basic Info & Work Date */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs uppercase font-bold text-secondary">Title</label>
                   <input required className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.title || ''} onChange={e => setCurrentProject({...currentProject, title: e.target.value})} placeholder="프로젝트 제목" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-secondary">Work Date (Year-Month)</label>
+                  <div className="relative">
+                    <input 
+                      type="month" 
+                      required
+                      className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none appearance-none" 
+                      value={workDateInput} 
+                      onChange={e => setWorkDateInput(e.target.value)} 
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">
+                        <Calendar size={18} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Client & Description */}
+               <div className="space-y-2">
                   <label className="text-xs uppercase font-bold text-secondary">Client</label>
                   <input required className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.client || ''} onChange={e => setCurrentProject({...currentProject, client: e.target.value})} placeholder="클라이언트명" />
                 </div>
-              </div>
               
               <div className="space-y-2">
                 <label className="text-xs uppercase font-bold text-secondary">Description</label>
                 <textarea className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" rows={3} value={currentProject.description || ''} onChange={e => setCurrentProject({...currentProject, description: e.target.value})} placeholder="프로젝트 설명..." />
               </div>
 
+              {/* 3. Vimeo Link */}
               <div className="space-y-2">
                  <label className="text-xs uppercase font-bold text-secondary">Vimeo Video ID (Numbers Only)</label>
                  <input className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.vimeo_id || ''} onChange={e => setCurrentProject({...currentProject, vimeo_id: e.target.value})} placeholder="예: 375468729" />
                  <p className="text-[10px] text-secondary">Vimeo 주소 뒷부분 숫자만 입력하세요.</p>
               </div>
 
-              {/* Advanced Image Upload & Sorting */}
+              {/* 4. Images */}
               <div className="space-y-4">
                 <label className="text-xs uppercase font-bold text-secondary flex justify-between">
                   <span>Gallery Images</span>
@@ -647,7 +682,7 @@ const Admin: React.FC = () => {
                 )}
               </div>
 
-              {/* Tag Selection Pills */}
+              {/* 5. Tags */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-3">
                   <label className="text-xs uppercase font-bold text-secondary">Industry Tags</label>
@@ -691,6 +726,7 @@ const Admin: React.FC = () => {
                 </div>
               </div>
 
+              {/* 6. Checkboxes & Footer */}
               <div className="flex gap-8 pt-4 border-t border-primary/5">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" className="w-5 h-5 accent-primary" checked={currentProject.is_featured || false} onChange={e => setCurrentProject({...currentProject, is_featured: e.target.checked})} />
