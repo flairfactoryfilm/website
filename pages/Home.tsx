@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowDownRight } from 'lucide-react';
+import { ArrowRight, ArrowDown } from 'lucide-react';
 
 const Home: React.FC = () => {
   // CTA Cursor Logic
@@ -169,35 +169,26 @@ const Home: React.FC = () => {
   return (
     <div className="w-full bg-background text-primary">
       
-      {/* 1. Typography Motion Hero */}
-      <section className="relative h-screen flex flex-col justify-between px-4 md:px-6 pt-32 pb-12 overflow-hidden z-10 bg-background">
-        <div className="flex justify-between items-start text-xs font-bold uppercase tracking-widest text-secondary animate-fade-in">
-          <div className="flex flex-col gap-1">
-            <span>Based in Seoul</span>
-            <span>Global Vision</span>
-          </div>
-          <div className="text-right">
-            <span>Scroll for Showcase</span>
-            <div className="animate-bounce mt-2 flex justify-end">
-              <ArrowDownRight size={16} />
-            </div>
-          </div>
+      {/* 1. Showreel Hero Section (Replaced Typography Hero) */}
+      <section className="relative h-screen w-full overflow-hidden bg-black z-10">
+        {/* Vimeo Background Iframe */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+          <iframe 
+            src="https://player.vimeo.com/video/663244089?background=1&autoplay=1&loop=1&byline=0&title=0&muted=1" 
+            className="absolute top-1/2 left-1/2 w-[177.77vh] h-full min-w-full min-h-[56.25vw] -translate-x-1/2 -translate-y-1/2 object-cover"
+            frameBorder="0" 
+            allow="autoplay; fullscreen; picture-in-picture" 
+            allowFullScreen
+            title="Showreel"
+          />
         </div>
 
-        <div className="relative z-10 select-none">
-          <h1 className="text-[14vw] leading-[0.8] font-display font-bold tracking-tighter mix-blend-exclusion">
-            <div className="overflow-hidden"><span className="block animate-slide-up">FLAIR</span></div>
-            <div className="overflow-hidden ml-[10vw]"><span className="block animate-slide-up" style={{ animationDelay: '0.15s' }}>FACTORY</span></div>
-            <div className="overflow-hidden"><span className="block animate-slide-up text-primary/20" style={{ animationDelay: '0.3s' }}>FILM</span></div>
-          </h1>
-        </div>
+        {/* Optional Overlay for text readability (if needed later) or styling */}
+        <div className="absolute inset-0 bg-black/10" />
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end animate-fade-in" style={{ animationDelay: '0.5s' }}>
-          <div className="md:col-span-4">
-            <p className="text-sm md:text-base text-secondary leading-relaxed max-w-xs break-keep">
-              Defining the future of cinematic experiences through motion, technology, and art.
-            </p>
-          </div>
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce text-white/50">
+          <ArrowDown size={32} />
         </div>
       </section>
 
