@@ -162,11 +162,11 @@ const WorksDetail: React.FC = () => {
             <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-8 border-t border-primary/10 pt-4 inline-block w-full">Project Stills</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {project.images.map((url, index) => (
-                 <div key={index} className="relative group overflow-hidden bg-surface aspect-[4/3]">
+                 <div key={index} className="relative group overflow-hidden bg-surface">
                    <img 
                     src={url} 
                     alt={`Still ${index + 1}`} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-auto transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                    />
                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500" />
