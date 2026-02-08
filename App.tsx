@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis'; // Lenis 추가
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import About from './pages/About';
 import Works from './pages/Works';
 import WorksDetail from './pages/WorksDetail';
 import Contact from './pages/Contact';
@@ -35,6 +36,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
           <Route path="works" element={<Works />} />
           <Route path="works/:id" element={<WorksDetail />} />
           <Route path="contact" element={<Contact />} />
