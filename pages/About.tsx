@@ -1,16 +1,44 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Globe, Layers, 
   Video, MonitorPlay, MessageSquare, 
-  ArrowRight, CheckCircle2 
+  ArrowRight
 } from 'lucide-react';
 
 const About: React.FC = () => {
+  // --- Process Section Hover Logic ---
+  const [activeProcess, setActiveProcess] = useState<number | null>(null);
+  const cursorImgRef = useRef<HTMLDivElement>(null);
+
+  // 마우스 움직임에 따라 이미지 위치 업데이트 (성능 최적화를 위해 requestAnimationFrame 사용)
+  useEffect(() => {
+    const moveCursor = (e: MouseEvent) => {
+      if (cursorImgRef.current && activeProcess !== null) {
+        // 마우스 포인터에서 약간 띄워서 가리지 않게 배치
+        const x = e.clientX + 20; 
+        const y = e.clientY + 20;
+        cursorImgRef.current.style.transform = `translate(${x}px, ${y}px)`;
+      }
+    };
+
+    window.addEventListener('mousemove', moveCursor);
+    return () => window.removeEventListener('mousemove', moveCursor);
+  }, [activeProcess]);
+
+  // 임시 이미지 배열 (나중에 DB 데이터로 교체하세요)
+  const processImages = [
+    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80", // Kick-off
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", // Strategy
+    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=800&q=80", // Production
+    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=800&q=80", // Post
+    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=800&q=80", // Delivery
+  ];
+
   return (
     <div className="w-full animate-fade-in pb-20">
       
       {/* 1. Hero Section */}
-      <section className="px-4 md:px-6 mb-24 md:mb-32">
+      <section className="px-4 md:px-6 mb-24 md:mb-32 pt-12 md:pt-20">
         <div className="max-w-7xl mx-auto border-b border-primary/10 pb-12">
           <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-4 animate-slide-up">
             Who We Are
@@ -34,7 +62,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Why Flair Factory? (Killer Content) */}
+      {/* 2. Why Flair Factory? (Square Cards & Invert Hover) */}
       <section className="px-4 md:px-6 mb-32">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -44,88 +72,111 @@ const About: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Point 1 */}
-            <div className="p-8 bg-surface rounded-xl border border-primary/5 hover:border-primary/20 transition-colors group">
-              <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mb-6 text-primary group-hover:bg-primary group-hover:text-background transition-colors">
-                <Users size={24} />
+            <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
+                <Users size={28} />
               </div>
-              <h3 className="text-xl font-bold text-primary mb-3">100% In-House System</h3>
-              <p className="text-secondary leading-relaxed text-sm">
-                기획부터 촬영, 편집, 납품까지. 외주 없이 모든 과정을 내부 전문가 팀이 직접 수행하여 최상의 퀄리티와 일관성을 보장합니다.
-              </p>
+              <div>
+                <h3 className="text-2xl font-bold text-primary mb-4 group-hover:text-background transition-colors">100% In-House</h3>
+                <p className="text-secondary text-sm leading-relaxed group-hover:text-background/80 transition-colors">
+                  기획부터 촬영, 편집, 납품까지. 외주 없이 모든 과정을 내부 전문가 팀이 직접 수행하여 최상의 퀄리티를 보장합니다.
+                </p>
+              </div>
             </div>
 
             {/* Point 2 */}
-            <div className="p-8 bg-surface rounded-xl border border-primary/5 hover:border-primary/20 transition-colors group">
-              <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mb-6 text-primary group-hover:bg-primary group-hover:text-background transition-colors">
-                <Globe size={24} />
+            <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
+                <Globe size={28} />
               </div>
-              <h3 className="text-xl font-bold text-primary mb-3">Global Localization</h3>
-              <p className="text-secondary leading-relaxed text-sm">
-                단순 번역이 아닙니다. 내부 전문 번역가를 통해 언어적 뉘앙스까지 고려한 완벽한 다국어 마케팅 영상을 제작합니다.
-              </p>
+              <div>
+                <h3 className="text-2xl font-bold text-primary mb-4 group-hover:text-background transition-colors">Global Native</h3>
+                <p className="text-secondary text-sm leading-relaxed group-hover:text-background/80 transition-colors">
+                  내부 전문 번역가를 통해 언어적 뉘앙스까지 고려한 완벽한 다국어 콘텐츠를 제작하여 글로벌 시장을 공략합니다.
+                </p>
+              </div>
             </div>
 
             {/* Point 3 */}
-            <div className="p-8 bg-surface rounded-xl border border-primary/5 hover:border-primary/20 transition-colors group">
-              <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mb-6 text-primary group-hover:bg-primary group-hover:text-background transition-colors">
-                <Layers size={24} />
+            <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
+                <Layers size={28} />
               </div>
-              <h3 className="text-xl font-bold text-primary mb-3">Cross-Genre Expert</h3>
-              <p className="text-secondary leading-relaxed text-sm">
-                실사 촬영과 2D/3D 모션그래픽의 경계를 넘나듭니다. 다양한 기법을 융합하여 프로젝트 목적에 가장 적합한 결과물을 만듭니다.
-              </p>
+              <div>
+                <h3 className="text-2xl font-bold text-primary mb-4 group-hover:text-background transition-colors">Cross-Genre</h3>
+                <p className="text-secondary text-sm leading-relaxed group-hover:text-background/80 transition-colors">
+                  실사 촬영과 모션그래픽의 경계를 허무는 융합 콘텐츠로 프로젝트 목적에 가장 강력한 임팩트를 만듭니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Business Areas */}
-      <section className="px-4 md:px-6 mb-32 bg-surface/30 py-24 border-y border-primary/5">
+      {/* 3. Business Areas (Grid Layout Redesign) */}
+      <section className="px-4 md:px-6 mb-40">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-16 text-center">Business Areas</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-12 border-b border-primary/10 pb-6">
+            Business Areas
+          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-4 bg-background rounded-full border border-primary/10 text-primary mb-2">
-                <Video size={32} strokeWidth={1.5} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Area 1 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-primary">
+                <div className="p-3 bg-surface rounded-lg">
+                  <Video size={24} />
+                </div>
+                <h3 className="text-xl font-bold">Film Production</h3>
               </div>
-              <h3 className="text-xl font-bold text-primary">Film Production</h3>
-              <ul className="text-secondary text-sm space-y-2">
-                <li>인터뷰 / 제품 촬영</li>
-                <li>드론 촬영 (Drone Cinematography)</li>
-                <li>실시간 송출 (Live Streaming)</li>
-              </ul>
+              <div className="grid grid-cols-1 gap-2">
+                {['인터뷰 / 제품 촬영', '드론 시네마토그래피', '4K 실시간 송출'].map((item, i) => (
+                  <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-4 bg-background rounded-full border border-primary/10 text-primary mb-2">
-                <MonitorPlay size={32} strokeWidth={1.5} />
+            {/* Area 2 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-primary">
+                <div className="p-3 bg-surface rounded-lg">
+                  <MonitorPlay size={24} />
+                </div>
+                <h3 className="text-xl font-bold">3D & Motion</h3>
               </div>
-              <h3 className="text-xl font-bold text-primary">3D & Motion Graphics</h3>
-              <ul className="text-secondary text-sm space-y-2">
-                <li>3D 제품 모델링 & 렌더링</li>
-                <li>기업 소개 애니메이션</li>
-                <li>바이럴 모션그래픽</li>
-              </ul>
+              <div className="grid grid-cols-1 gap-2">
+                {['3D 제품 모델링 & 렌더링', '기업 소개 애니메이션', '바이럴 모션그래픽'].map((item, i) => (
+                  <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-4 bg-background rounded-full border border-primary/10 text-primary mb-2">
-                <MessageSquare size={32} strokeWidth={1.5} />
+            {/* Area 3 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-primary">
+                <div className="p-3 bg-surface rounded-lg">
+                  <MessageSquare size={24} />
+                </div>
+                <h3 className="text-xl font-bold">Global Strategy</h3>
               </div>
-              <h3 className="text-xl font-bold text-primary">Global Strategy</h3>
-              <ul className="text-secondary text-sm space-y-2">
-                <li>전문 번역가 상주</li>
-                <li>다국어 버전 영상 제작</li>
-                <li>해외 마케팅용 콘텐츠 현지화</li>
-              </ul>
+              <div className="grid grid-cols-1 gap-2">
+                {['전문 번역가 상주', '다국어 버전 제작', '해외 마케팅 현지화'].map((item, i) => (
+                  <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Process */}
-      <section className="px-4 md:px-6 mb-32">
+      {/* 4. Process (Hover Image Reveal) */}
+      <section className="px-4 md:px-6 mb-32 relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
             <div className="md:w-1/3">
@@ -136,7 +187,7 @@ const About: React.FC = () => {
               </p>
             </div>
             
-            <div className="md:w-2/3 space-y-8">
+            <div className="md:w-2/3 space-y-4">
               {[
                 { step: '01', title: 'Kick-off Meeting', desc: '프로젝트 목표 및 니즈 정밀 분석' },
                 { step: '02', title: 'Planning & Strategy', desc: '기획안 및 스토리보드 구성' },
@@ -144,28 +195,48 @@ const About: React.FC = () => {
                 { step: '04', title: 'Post-Production', desc: '편집, 합성, 사운드 믹싱' },
                 { step: '05', title: 'Delivery', desc: '최종 피드백 반영 및 납품' },
               ].map((item, index) => (
-                <div key={index} className="flex items-start gap-6 group">
-                  <span className="text-2xl font-display font-bold text-primary/20 group-hover:text-primary transition-colors">
+                <div 
+                  key={index} 
+                  className="flex items-center gap-6 py-8 border-b border-primary/10 group cursor-none hover:pl-4 transition-all duration-300"
+                  onMouseEnter={() => setActiveProcess(index)}
+                  onMouseLeave={() => setActiveProcess(null)}
+                >
+                  <span className="text-sm font-bold text-primary/30 group-hover:text-primary transition-colors">
                     {item.step}
                   </span>
-                  <div className="flex-1 border-b border-primary/10 pb-8 group-hover:border-primary/30 transition-colors">
-                    <h4 className="text-lg font-bold text-primary mb-2">{item.title}</h4>
-                    <p className="text-secondary text-sm">{item.desc}</p>
+                  <div className="flex-1">
+                    <h4 className="text-2xl font-bold text-primary mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
+                    <p className="text-secondary text-sm group-hover:text-primary/70 transition-colors">{item.desc}</p>
                   </div>
+                  <ArrowRight className="text-primary/0 group-hover:text-primary -translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
                 </div>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Floating Image Container (Fixed position to follow mouse) */}
+        <div 
+          ref={cursorImgRef}
+          className="fixed top-0 left-0 w-64 h-40 pointer-events-none z-50 overflow-hidden rounded-lg shadow-2xl opacity-0 transition-opacity duration-300"
+          style={{ opacity: activeProcess !== null ? 1 : 0 }}
+        >
+          {activeProcess !== null && (
+            <img 
+              src={processImages[activeProcess]} 
+              alt="Process" 
+              className="w-full h-full object-cover animate-fade-in"
+            />
+          )}
+        </div>
       </section>
 
-      {/* 5. Partners (Simple Grid Placeholder) */}
+      {/* 5. Partners */}
       <section className="px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-8 border-t border-primary/10 pt-8">
             Trusted Partners
           </h3>
-          {/* 로고 이미지가 준비되면 img 태그로 교체, 현재는 텍스트 플레이스홀더 */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {['Trade World', 'Denotisia', 'Partner A', 'Partner B', 'Partner C'].map((partner, i) => (
               <div key={i} className="h-24 bg-surface rounded-lg flex items-center justify-center text-primary/30 font-bold border border-primary/5 hover:border-primary/20 transition-colors">
