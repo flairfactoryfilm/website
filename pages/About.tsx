@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Globe, Layers, 
   Video, MonitorPlay, MessageSquare, 
-  ArrowRight
+  ArrowRight, Sparkles, ArrowDownRight
 } from 'lucide-react';
 
 const About: React.FC = () => {
@@ -10,11 +10,14 @@ const About: React.FC = () => {
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
   const cursorImgRef = useRef<HTMLDivElement>(null);
 
-  // --- Expandable Image Logic ---
-  const expanderSectionRef = useRef<HTMLElement>(null);
+  // --- Refs for Sections ---
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const whySectionRef = useRef<HTMLElement>(null);
+  const businessSectionRef = useRef<HTMLElement>(null);
+  const processSectionRef = useRef<HTMLElement>(null);
 
-  // 마우스 움직임에 따라 이미지 위치 업데이트 (Process Section)
+  // 마우스 커서 팔로워 (Process 섹션용)
   useEffect(() => {
     const moveCursor = (e: MouseEvent) => {
       if (cursorImgRef.current && activeProcess !== null) {
@@ -23,40 +26,66 @@ const About: React.FC = () => {
         cursorImgRef.current.style.transform = `translate(${x}px, ${y}px)`;
       }
     };
-
     window.addEventListener('mousemove', moveCursor);
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [activeProcess]);
 
-  // 스크롤에 따른 이미지 높이 확장 로직 (Bottom-Up)
+  // --- 통합 스크롤 핸들러 (이미지 확장 + 순차 애니메이션) ---
   useEffect(() => {
-    const handleImageScroll = () => {
-      if (!expanderSectionRef.current || !imageContainerRef.current) return;
-
-      const rect = expanderSectionRef.current.getBoundingClientRect();
+    const handleScroll = () => {
       const windowHeight = window.innerHeight;
-      
-      // 섹션의 전체 높이에서 화면 높이를 뺀 만큼이 실제 스크롤 가능한 거리
-      const totalScrollDistance = rect.height - windowHeight;
 
-      if (totalScrollDistance <= 0) return;
+      // 1. Hero Image Expansion Logic
+      if (heroSectionRef.current && imageContainerRef.current) {
+        const rect = heroSectionRef.current.getBoundingClientRect();
+        const totalDistance = rect.height - windowHeight;
 
-      // rect.top이 0이 될 때(화면 상단 도달)부터 계산 시작
-      let progress = -rect.top / totalScrollDistance;
-      
-      // 0 ~ 1 사이로 값 제한
-      progress = Math.min(Math.max(progress, 0), 1);
+        if (totalDistance > 0) {
+          let progress = -rect.top / totalDistance;
+          progress = Math.min(Math.max(progress, 0), 1);
+          
+          // 이미지가 차오르는 속도 조절 (스크롤 초반에 빨리 차오르고 멈춤)
+          const currentHeight = Math.min(progress * 130, 100); 
+          imageContainerRef.current.style.height = `${currentHeight}vh`;
+        }
+      }
 
-      // 높이 계산: 30vh에서 시작해서 100vh까지 증가
-      const startHeight = 30; // 30%
-      const endHeight = 100;  // 100%
-      const currentHeight = startHeight + (progress * (endHeight - startHeight));
+      // 2. Generic Sequential Reveal Animation Helper
+      const animateSectionItems = (sectionRef: React.RefObject<HTMLElement>) => {
+        if (!sectionRef.current) return;
+        
+        const rect = sectionRef.current.getBoundingClientRect();
+        const totalDistance = rect.height - windowHeight;
+        
+        // 섹션 진행률 (0.0 ~ 1.0)
+        let progress = -rect.top / totalDistance;
+        
+        // 해당 섹션 안의 애니메이션 대상들(.reveal-item) 찾기
+        const items = sectionRef.current.querySelectorAll('.reveal-item');
+        
+        items.forEach((item, index) => {
+          // 아이템별 등장 타이밍 계산 (간격 넓게)
+          // 예: 첫번째 아이템은 5% 스크롤 때, 두번째는 20% 때...
+          const triggerPoint = 0.05 + (index * 0.15); 
+          
+          if (progress > triggerPoint) {
+            (item as HTMLElement).style.opacity = '1';
+            (item as HTMLElement).style.transform = 'translateY(0)';
+          } else {
+            (item as HTMLElement).style.opacity = '0';
+            (item as HTMLElement).style.transform = 'translateY(40px)';
+          }
+        });
+      };
 
-      imageContainerRef.current.style.height = `${currentHeight}vh`;
+      // 각 스티키 섹션에 애니메이션 적용
+      animateSectionItems(whySectionRef);
+      animateSectionItems(businessSectionRef);
+      animateSectionItems(processSectionRef);
     };
 
-    window.addEventListener('scroll', handleImageScroll);
-    return () => window.removeEventListener('scroll', handleImageScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // 임시 이미지 배열
@@ -71,57 +100,57 @@ const About: React.FC = () => {
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Hero Section */}
-      <section className="px-4 md:px-6 mb-24 md:mb-32 pt-12 md:pt-20">
-        <div className="max-w-7xl mx-auto border-b border-primary/10 pb-12">
-          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-4 animate-slide-up">
-            Who We Are
-          </span>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-primary leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            Boundless Creativity,<br />
-            <span className="text-secondary/60">One Unified Team.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-secondary font-light max-w-2xl leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
-            다국어 서비스까지 제공하는 <strong className="text-primary font-medium">올인원 크리에이티브 그룹</strong>입니다.
-          </p>
-          
-          <div className="flex flex-wrap gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            {['#All-in-House', '#Global-Ready', '#Cross-Genre'].map((keyword) => (
-              <span key={keyword} className="px-4 py-2 rounded-full border border-primary/10 text-sm font-bold text-primary bg-surface/50">
-                {keyword}
-              </span>
-            ))}
+      {/* 1. Combined Hero Section (Text Fixed + Image Rising) */}
+      {/* 높이를 550vh로 조정 (기존 750vh의 약 75%) */}
+      <section ref={heroSectionRef} className="relative h-[550vh]">
+        
+        {/* Layer 2: Fixed Text (Z-index 20, Exclusion Blend) */}
+        <div className="sticky top-0 h-screen w-full flex flex-col justify-center px-4 md:px-6 pt-12 md:pt-20 z-20 mix-blend-exclusion text-white pointer-events-none">
+          <div className="max-w-7xl mx-auto w-full pointer-events-auto">
+            <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up opacity-80">
+              Who We Are
+            </span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              Boundless Creativity,<br />
+              <span className="opacity-60">One Unified Team.</span>
+            </h1>
+            <p className="text-lg md:text-xl font-light max-w-2xl leading-relaxed animate-slide-up opacity-90" style={{ animationDelay: '0.2s' }}>
+              플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
+              다국어 서비스까지 제공하는 <strong className="font-medium">올인원 크리에이티브 그룹</strong>입니다.
+            </p>
+            
+            <div className="flex flex-wrap gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+              {['#All-in-House', '#Global-Ready', '#Cross-Genre'].map((keyword) => (
+                <span key={keyword} className="px-4 py-2 rounded-full border border-white/30 text-sm font-bold bg-white/10">
+                  {keyword}
+                </span>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Layer 1: Rising Image (Z-index 10) */}
+        <div className="absolute inset-0 z-10">
+           <div className="sticky top-0 h-screen w-full flex flex-col justify-end overflow-hidden">
+              <div 
+                ref={imageContainerRef} 
+                className="w-full absolute bottom-0 left-0 transition-height duration-75 ease-linear will-change-[height]"
+                style={{ height: '0vh' }} 
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
+                  alt="Cinematic View" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+              </div>
+           </div>
         </div>
       </section>
 
-      {/* [NEW] Expandable Image Section */}
-      {/* 높이를 750vh로 설정 (기존 250vh의 3배) */}
-      <section ref={expanderSectionRef} className="relative h-[750vh] mb-32">
-        {/* justify-end로 설정하여 컨텐츠가 바닥에 붙도록 함 */}
-        <div className="sticky top-0 h-screen w-full flex flex-col justify-end overflow-hidden">
-          {/* 높이가 동적으로 변하는 컨테이너 */}
-          <div 
-            ref={imageContainerRef} 
-            className="w-full relative transition-height duration-75 ease-linear will-change-[height]"
-            style={{ height: '30vh' }} // 초기 높이 30%
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
-              alt="Cinematic View" 
-              className="w-full h-full object-cover"
-            />
-            {/* 오버레이 */}
-            <div className="absolute inset-0 bg-black/20" />
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Why Flair Factory? (Pinned Section) */}
-      {/* 높이를 400vh로 설정하여 스크롤 고정 시간 확보 */}
-      <section className="relative h-[400vh] bg-background">
-        {/* justify-center 제거 및 pt-32 추가로 상단 고정 위치 통일 */}
+      {/* 2. Why Flair Factory? (Sequential Reveal) */}
+      {/* 높이를 800vh로 설정 (기존 400vh의 2배) */}
+      <section ref={whySectionRef} className="relative h-[800vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -131,7 +160,7 @@ const About: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Point 1 */}
-              <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Users size={28} />
                 </div>
@@ -144,7 +173,7 @@ const About: React.FC = () => {
               </div>
 
               {/* Point 2 */}
-              <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Globe size={28} />
                 </div>
@@ -157,7 +186,7 @@ const About: React.FC = () => {
               </div>
 
               {/* Point 3 */}
-              <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 transition-all duration-500 hover:bg-primary flex flex-col justify-between">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Layers size={28} />
                 </div>
@@ -173,9 +202,8 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Business Areas (Pinned Section) */}
-      <section className="relative h-[400vh] bg-background">
-        {/* 상단 정렬 고정 (pt-32) */}
+      {/* 3. Business Areas (Sequential Reveal) */}
+      <section ref={businessSectionRef} className="relative h-[800vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-12 border-b border-primary/10 pb-6">
@@ -184,7 +212,7 @@ const About: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Area 1 */}
-              <div className="space-y-6">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
                 <div className="flex items-center gap-3 text-primary">
                   <div className="p-3 bg-surface rounded-lg">
                     <Video size={24} />
@@ -201,7 +229,7 @@ const About: React.FC = () => {
               </div>
 
               {/* Area 2 */}
-              <div className="space-y-6">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
                 <div className="flex items-center gap-3 text-primary">
                   <div className="p-3 bg-surface rounded-lg">
                     <MonitorPlay size={24} />
@@ -218,7 +246,7 @@ const About: React.FC = () => {
               </div>
 
               {/* Area 3 */}
-              <div className="space-y-6">
+              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
                 <div className="flex items-center gap-3 text-primary">
                   <div className="p-3 bg-surface rounded-lg">
                     <MessageSquare size={24} />
@@ -238,9 +266,8 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Process (Pinned Section & Hover Image Reveal) */}
-      <section className="relative h-[400vh] bg-background">
-        {/* 상단 정렬 고정 (pt-32) */}
+      {/* 4. Process (Sequential Reveal) */}
+      <section ref={processSectionRef} className="relative h-[800vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
@@ -262,7 +289,7 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    className="flex items-center gap-6 py-8 border-b border-primary/10 group cursor-none hover:pl-4 transition-all duration-300"
+                    className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-8 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
                   >
@@ -298,7 +325,7 @@ const About: React.FC = () => {
       </section>
 
       {/* 5. Partners */}
-      <section className="px-4 md:px-6 py-32 bg-background border-t border-primary/5">
+      <section className="px-4 md:px-6 py-32 bg-background border-t border-primary/5 relative z-30">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
             Trusted Partners
