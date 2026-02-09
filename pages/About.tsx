@@ -13,9 +13,15 @@ const About: React.FC = () => {
   // --- Refs for Sections ---
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
+  const heroTextRef = useRef<HTMLDivElement>(null); // [NEW] 히어로 텍스트 패럴랙스용 Ref
+  
   const whySectionRef = useRef<HTMLElement>(null);
   const businessSectionRef = useRef<HTMLElement>(null);
   const processSectionRef = useRef<HTMLElement>(null);
+  
+  // [NEW] Partners Section Logic
+  const partnersSectionRef = useRef<HTMLElement>(null);
+  const [isPartnersVisible, setIsPartnersVisible] = useState(false);
 
   // 마우스 커서 팔로워 (Process 섹션용)
   useEffect(() => {
@@ -30,23 +36,53 @@ const About: React.FC = () => {
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [activeProcess]);
 
-  // --- 통합 스크롤 핸들러 (이미지 확장 + 순차 애니메이션) ---
+  // [NEW] Partners Intersection Observer (도착 시 순차 재생)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsPartnersVisible(true);
+          observer.disconnect(); // 한 번 실행 후 연결 해제
+        }
+      },
+      { threshold: 0.2 } // 20% 정도 보이면 실행
+    );
+
+    if (partnersSectionRef.current) {
+      observer.observe(partnersSectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // --- 통합 스크롤 핸들러 ---
   useEffect(() => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
 
-      // 1. Hero Image Expansion Logic
-      if (heroSectionRef.current && imageContainerRef.current) {
+      // 1. Hero Section Logic (Image Expansion + Text Parallax)
+      if (heroSectionRef.current) {
         const rect = heroSectionRef.current.getBoundingClientRect();
         const totalDistance = rect.height - windowHeight;
 
         if (totalDistance > 0) {
           let progress = -rect.top / totalDistance;
-          progress = Math.min(Math.max(progress, 0), 1);
+          // 범위 제한 없음 (자연스러운 움직임을 위해)
           
-          // 이미지가 차오르는 속도 조절 (스크롤 초반에 빨리 차오르고 멈춤)
-          const currentHeight = Math.min(progress * 130, 100); 
-          imageContainerRef.current.style.height = `${currentHeight}vh`;
+          // (1) 이미지 확장 (기존 로직 유지)
+          if (imageContainerRef.current) {
+             const clampedProgress = Math.min(Math.max(progress, 0), 1);
+             const currentHeight = Math.min(clampedProgress * 130, 100); 
+             imageContainerRef.current.style.height = `${currentHeight}vh`;
+          }
+
+          // (2) [NEW] 텍스트 패럴랙스 (화면 하단에서 시작해 천천히 위로 올라감)
+          if (heroTextRef.current) {
+            // progress가 커질수록(스크롤 내릴수록) 위로(-Y) 이동
+            // 0.4를 곱해 이미지보다 느리게 움직이도록 설정 (리듬감)
+            const parallaxY = progress * 40; 
+            heroTextRef.current.style.transform = `translateY(-${parallaxY}vh)`;
+          }
         }
       }
 
@@ -60,13 +96,11 @@ const About: React.FC = () => {
         // 섹션 진행률 (0.0 ~ 1.0)
         let progress = -rect.top / totalDistance;
         
-        // 해당 섹션 안의 애니메이션 대상들(.reveal-item) 찾기
         const items = sectionRef.current.querySelectorAll('.reveal-item');
         
         items.forEach((item, index) => {
-          // 아이템별 등장 타이밍 계산 (간격 넓게)
-          // 예: 첫번째 아이템은 5% 스크롤 때, 두번째는 20% 때...
-          const triggerPoint = 0.05 + (index * 0.15); 
+          // 등장 타이밍 (간격 좁힘: 0.15 -> 0.12)
+          const triggerPoint = 0.05 + (index * 0.12); 
           
           if (progress > triggerPoint) {
             (item as HTMLElement).style.opacity = '1';
@@ -78,7 +112,6 @@ const About: React.FC = () => {
         });
       };
 
-      // 각 스티키 섹션에 애니메이션 적용
       animateSectionItems(whySectionRef);
       animateSectionItems(businessSectionRef);
       animateSectionItems(processSectionRef);
@@ -100,13 +133,13 @@ const About: React.FC = () => {
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Combined Hero Section (Text Fixed + Image Rising) */}
-      {/* 높이를 550vh로 조정 (기존 750vh의 약 75%) */}
+      {/* 1. Hero Section (Parallax Text + Rising Image) */}
       <section ref={heroSectionRef} className="relative h-[550vh]">
         
-        {/* Layer 2: Fixed Text (Z-index 20, Exclusion Blend) */}
-        <div className="sticky top-0 h-screen w-full flex flex-col justify-center px-4 md:px-6 pt-12 md:pt-20 z-20 mix-blend-exclusion text-white pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full pointer-events-auto">
+        {/* Layer 2: Parallax Text (Starts at Bottom, Moves Up) */}
+        {/* justify-center -> justify-end로 변경하여 하단 시작 */}
+        <div className="sticky top-0 h-screen w-full flex flex-col justify-end px-4 md:px-6 pb-20 z-20 mix-blend-exclusion text-white pointer-events-none">
+          <div ref={heroTextRef} className="max-w-7xl mx-auto w-full pointer-events-auto will-change-transform">
             <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up opacity-80">
               Who We Are
             </span>
@@ -129,7 +162,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* Layer 1: Rising Image (Z-index 10) */}
+        {/* Layer 1: Rising Image */}
         <div className="absolute inset-0 z-10">
            <div className="sticky top-0 h-screen w-full flex flex-col justify-end overflow-hidden">
               <div 
@@ -148,9 +181,9 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Why Flair Factory? (Sequential Reveal) */}
-      {/* 높이를 800vh로 설정 (기존 400vh의 2배) */}
-      <section ref={whySectionRef} className="relative h-[800vh] bg-background z-30">
+      {/* 2. Why Flair Factory? */}
+      {/* 높이 축소: 800vh -> 600vh (75%) */}
+      <section ref={whySectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -202,8 +235,9 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Business Areas (Sequential Reveal) */}
-      <section ref={businessSectionRef} className="relative h-[800vh] bg-background z-30">
+      {/* 3. Business Areas */}
+      {/* 높이 축소: 800vh -> 600vh (75%) */}
+      <section ref={businessSectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-12 border-b border-primary/10 pb-6">
@@ -266,8 +300,9 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Process (Sequential Reveal) */}
-      <section ref={processSectionRef} className="relative h-[800vh] bg-background z-30">
+      {/* 4. Process */}
+      {/* 높이 축소: 800vh -> 600vh (75%) */}
+      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
@@ -289,7 +324,8 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-8 border-b border-primary/10 group cursor-none hover:pl-4"
+                    // 간격 축소: py-8 -> py-6
+                    className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
                   >
@@ -324,15 +360,21 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Partners */}
-      <section className="px-4 md:px-6 py-32 bg-background border-t border-primary/5 relative z-30">
+      {/* 5. Partners (Intersection Observer Reveal) */}
+      <section ref={partnersSectionRef} className="px-4 md:px-6 py-32 bg-background border-t border-primary/5 relative z-30">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
             Trusted Partners
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {['Trade World', 'Denotisia', 'Partner A', 'Partner B', 'Partner C'].map((partner, i) => (
-              <div key={i} className="h-24 bg-surface rounded-lg flex items-center justify-center text-primary/30 font-bold border border-primary/5 hover:border-primary/20 transition-colors">
+              <div 
+                key={i} 
+                className={`h-24 bg-surface rounded-lg flex items-center justify-center text-primary/30 font-bold border border-primary/5 hover:border-primary/20 transition-all duration-700
+                  ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+                `}
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
                 {partner}
               </div>
             ))}
