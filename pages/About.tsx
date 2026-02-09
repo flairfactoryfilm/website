@@ -10,11 +10,14 @@ const About: React.FC = () => {
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
   const cursorImgRef = useRef<HTMLDivElement>(null);
 
-  // 마우스 움직임에 따라 이미지 위치 업데이트 (성능 최적화를 위해 requestAnimationFrame 사용)
+  // --- Expandable Image Logic (NEW) ---
+  const expanderSectionRef = useRef<HTMLElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // 마우스 움직임에 따라 이미지 위치 업데이트 (Process Section)
   useEffect(() => {
     const moveCursor = (e: MouseEvent) => {
       if (cursorImgRef.current && activeProcess !== null) {
-        // 마우스 포인터에서 약간 띄워서 가리지 않게 배치
         const x = e.clientX + 20; 
         const y = e.clientY + 20;
         cursorImgRef.current.style.transform = `translate(${x}px, ${y}px)`;
@@ -25,13 +28,45 @@ const About: React.FC = () => {
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [activeProcess]);
 
-  // 임시 이미지 배열 (나중에 DB 데이터로 교체하세요)
+  // 스크롤에 따른 이미지 높이 확장 로직 (Expandable Image Section)
+  useEffect(() => {
+    const handleImageScroll = () => {
+      if (!expanderSectionRef.current || !imageContainerRef.current) return;
+
+      const rect = expanderSectionRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // 섹션의 전체 높이에서 화면 높이를 뺀 만큼이 실제 스크롤 가능한 거리
+      const totalScrollDistance = rect.height - windowHeight;
+
+      if (totalScrollDistance <= 0) return;
+
+      // rect.top이 0이 될 때(화면 상단 도달)부터 계산 시작
+      // 스크롤을 내릴수록 rect.top은 음수가 됨
+      let progress = -rect.top / totalScrollDistance;
+      
+      // 0 ~ 1 사이로 값 제한
+      progress = Math.min(Math.max(progress, 0), 1);
+
+      // 높이 계산: 30vh에서 시작해서 100vh까지 증가
+      const startHeight = 30; // 30%
+      const endHeight = 100;  // 100%
+      const currentHeight = startHeight + (progress * (endHeight - startHeight));
+
+      imageContainerRef.current.style.height = `${currentHeight}vh`;
+    };
+
+    window.addEventListener('scroll', handleImageScroll);
+    return () => window.removeEventListener('scroll', handleImageScroll);
+  }, []);
+
+  // 임시 이미지 배열
   const processImages = [
-    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80", // Kick-off
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", // Strategy
-    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=800&q=80", // Production
-    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=800&q=80", // Post
-    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=800&q=80", // Delivery
+    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80", 
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", 
+    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=800&q=80", 
+    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=800&q=80", 
+    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=800&q=80", 
   ];
 
   return (
@@ -58,6 +93,27 @@ const About: React.FC = () => {
                 {keyword}
               </span>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* [NEW] Expandable Image Section */}
+      {/* 높이를 250vh로 주어 충분한 스크롤 거리를 확보 */}
+      <section ref={expanderSectionRef} className="relative h-[250vh] mb-32">
+        <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+          {/* 높이가 동적으로 변하는 컨테이너 */}
+          <div 
+            ref={imageContainerRef} 
+            className="w-full relative transition-height duration-75 ease-linear will-change-[height]"
+            style={{ height: '30vh' }} // 초기 높이 30%
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
+              alt="Cinematic View" 
+              className="w-full h-full object-cover"
+            />
+            {/* 오버레이 (선택사항 - 텍스트 가독성이나 분위기를 위해) */}
+            <div className="absolute inset-0 bg-black/20" />
           </div>
         </div>
       </section>
