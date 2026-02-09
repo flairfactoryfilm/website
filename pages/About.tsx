@@ -100,7 +100,7 @@ const About: React.FC = () => {
         
         items.forEach((item, index) => {
           // 등장 타이밍 (간격 좁힘: 0.15 -> 0.12)
-          const triggerPoint = 0.05 + (index * 0.12); 
+          const triggerPoint = 0.15 + (index * 0.25); 
           
           if (progress > triggerPoint) {
             (item as HTMLElement).style.opacity = '1';
@@ -183,7 +183,7 @@ const About: React.FC = () => {
 
       {/* 2. Why Flair Factory? */}
       {/* 높이 축소: 800vh -> 600vh (75%) */}
-      <section ref={whySectionRef} className="relative h-[600vh] bg-background z-30">
+      <section ref={whySectionRef} className="relative h-[700vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12">
