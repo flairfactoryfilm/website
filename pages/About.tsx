@@ -10,9 +10,7 @@ const About: React.FC = () => {
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
 
   // --- Refs for Sections ---
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-  const heroSectionRef = useRef<HTMLElement>(null);
-  const heroTextRef = useRef<HTMLDivElement>(null); 
+  // [수정] Hero 섹션은 이제 CSS Sticky를 사용하므로 불필요한 ref 제거
   
   const whySectionRef = useRef<HTMLElement>(null);
   
@@ -50,39 +48,8 @@ const About: React.FC = () => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
 
-      // 1. Hero Section Logic (The Scale-Up)
-      if (heroSectionRef.current) {
-        const rect = heroSectionRef.current.getBoundingClientRect();
-        const totalDistance = rect.height - windowHeight;
-
-        if (totalDistance > 0) {
-          let progress = -rect.top / totalDistance;
-          // 0 ~ 1 사이로 값 제한 (이미지 크기 제어용)
-          const safeProgress = Math.min(Math.max(progress, 0), 1);
-          
-          // [NEW] Scale-Up Animation
-          if (imageContainerRef.current) {
-             // Width: 50vw -> 100vw
-             const currentW = 50 + (safeProgress * 50);
-             // Height: 30vh -> 100vh
-             const currentH = 30 + (safeProgress * 70);
-             // Border Radius: 24px -> 0px (꽉 찰 때 직각으로)
-             const currentRadius = 24 - (safeProgress * 24);
-
-             imageContainerRef.current.style.width = `${currentW}vw`;
-             imageContainerRef.current.style.height = `${currentH}vh`;
-             imageContainerRef.current.style.borderRadius = `${currentRadius}px`;
-          }
-
-          // Text Parallax (중앙에서 살짝 위로 이동)
-          if (heroTextRef.current) {
-            const parallaxY = progress * 30; 
-            heroTextRef.current.style.transform = `translateY(-${parallaxY}vh)`;
-            // 스크롤이 끝까지 가면 텍스트 투명도 조절 (선택사항, 여기선 유지)
-            // heroTextRef.current.style.opacity = `${1 - safeProgress}`; 
-          }
-        }
-      }
+      // 1. Hero Section Logic
+      // [수정] Idea 4는 CSS sticky + flow를 사용하므로 JS 계산 로직 제거함 (성능 최적화)
 
       // 2. Business Section Horizontal Scroll Logic
       if (businessSectionRef.current && businessScrollContainerRef.current) {
@@ -135,7 +102,7 @@ const About: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Process Images
+  // Process Images (배경으로 사용될 이미지들)
   const processImages = [
     "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=2000&q=80", 
     "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2000&q=80", 
@@ -179,48 +146,36 @@ const About: React.FC = () => {
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Hero Section (Scale-Up Center Expansion) */}
-      <section ref={heroSectionRef} className="relative h-[550vh]">
-        {/* Sticky Container: Centers everything */}
-        <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-          
-          {/* Layer 2: Text Overlay (Centered & Parallax) */}
-          <div ref={heroTextRef} className="absolute z-20 flex flex-col items-center justify-center text-center mix-blend-exclusion text-white pointer-events-none w-full px-4">
-            <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up opacity-80">
-              Who We Are
-            </span>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Boundless Creativity,<br />
-              <span className="opacity-60">One Unified Team.</span>
-            </h1>
-            <p className="text-lg md:text-xl font-light max-w-2xl leading-relaxed animate-slide-up opacity-90" style={{ animationDelay: '0.2s' }}>
-              플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
-              다국어 서비스까지 제공하는 <strong className="font-medium">올인원 크리에이티브 그룹</strong>입니다.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              {['#All-in-House', '#Global-Ready', '#Cross-Genre'].map((keyword) => (
-                <span key={keyword} className="px-4 py-2 rounded-full border border-white/30 text-sm font-bold bg-white/10">
-                  {keyword}
-                </span>
-              ))}
-            </div>
-          </div>
+      {/* 1. Hero Section (Sticky Parallax / Overlay) */}
+      {/* 높이를 200vh로 설정하여 스크롤 시 이미지가 덮이는 공간 확보 */}
+      <section className="relative h-[200vh] bg-background">
+        
+        {/* Layer 1: Text (Sticky, Stay behind) */}
+        {/* z-0으로 설정하여 올라오는 이미지 뒤에 위치 */}
+        <div className="sticky top-0 h-screen flex flex-col justify-center items-center text-center px-4 md:px-6 z-0">
+          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-4 animate-slide-up">
+            Who We Are
+          </span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-primary leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            Boundless Creativity,<br />
+            <span className="text-secondary/60">One Unified Team.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-secondary font-light max-w-2xl leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
+            다국어 서비스까지 제공하는 <strong className="text-primary font-medium">올인원 크리에이티브 그룹</strong>입니다.
+          </p>
+          {/* 태그 삭제됨 */}
+        </div>
 
-          {/* Layer 1: Expanding Image Box (Starts small, grows to full screen) */}
-          <div 
-            ref={imageContainerRef} 
-            className="relative z-10 overflow-hidden shadow-2xl transition-all duration-75 ease-linear will-change-[width,height,border-radius]"
-            style={{ width: '50vw', height: '30vh', borderRadius: '24px' }} 
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
-              alt="Cinematic View" 
-              className="w-full h-full object-cover"
-            />
-            {/* Dark Overlay for Text Readability */}
-            <div className="absolute inset-0 bg-black/30" />
-          </div>
-
+        {/* Layer 2: Image (Scrolls up over text) */}
+        {/* z-10으로 설정하여 텍스트 위를 덮음. absolute bottom-0으로 섹션 하단에 배치 */}
+        <div className="absolute bottom-0 w-full h-screen z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+           <img 
+             src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
+             alt="Cinematic View" 
+             className="w-full h-full object-cover"
+           />
+           <div className="absolute inset-0 bg-black/20" />
         </div>
       </section>
 
@@ -284,7 +239,7 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Horizontal Track (pt-24 for spacing) */}
+          {/* Horizontal Track */}
           <div 
             ref={businessScrollContainerRef}
             className="flex items-center pl-[5vw] pr-[5vw] pt-24 will-change-transform z-10"
