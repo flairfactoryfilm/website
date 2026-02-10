@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Globe, Layers, 
-  Video, MonitorPlay, MessageSquare, 
-  ArrowRight, Sparkles, ArrowDownRight
+  ArrowRight, Sparkles
 } from 'lucide-react';
 
 const About: React.FC = () => {
@@ -13,13 +12,17 @@ const About: React.FC = () => {
   // --- Refs for Sections ---
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
-  const heroTextRef = useRef<HTMLDivElement>(null); // [NEW] 히어로 텍스트 패럴랙스용 Ref
+  const heroTextRef = useRef<HTMLDivElement>(null); 
   
   const whySectionRef = useRef<HTMLElement>(null);
+  
+  // [NEW] Business Section Refs
   const businessSectionRef = useRef<HTMLElement>(null);
+  const businessScrollContainerRef = useRef<HTMLDivElement>(null);
+
   const processSectionRef = useRef<HTMLElement>(null);
   
-  // [NEW] Partners Section Logic
+  // Partners Logic
   const partnersSectionRef = useRef<HTMLElement>(null);
   const [isPartnersVisible, setIsPartnersVisible] = useState(false);
 
@@ -36,16 +39,16 @@ const About: React.FC = () => {
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [activeProcess]);
 
-  // [NEW] Partners Intersection Observer (도착 시 순차 재생)
+  // Partners Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsPartnersVisible(true);
-          observer.disconnect(); // 한 번 실행 후 연결 해제
+          observer.disconnect(); 
         }
       },
-      { threshold: 0.2 } // 20% 정도 보이면 실행
+      { threshold: 0.2 } 
     );
 
     if (partnersSectionRef.current) {
@@ -60,50 +63,61 @@ const About: React.FC = () => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
 
-      // 1. Hero Section Logic (Image Expansion + Text Parallax)
+      // 1. Hero Section Logic
       if (heroSectionRef.current) {
         const rect = heroSectionRef.current.getBoundingClientRect();
         const totalDistance = rect.height - windowHeight;
 
         if (totalDistance > 0) {
           let progress = -rect.top / totalDistance;
-          // 범위 제한 없음 (자연스러운 움직임을 위해)
           
-          // (1) 이미지 확장 (기존 로직 유지)
           if (imageContainerRef.current) {
              const clampedProgress = Math.min(Math.max(progress, 0), 1);
              const currentHeight = Math.min(clampedProgress * 130, 100); 
              imageContainerRef.current.style.height = `${currentHeight}vh`;
           }
 
-          // (2) [NEW] 텍스트 패럴랙스 (화면 하단에서 시작해 천천히 위로 올라감)
           if (heroTextRef.current) {
-            // progress가 커질수록(스크롤 내릴수록) 위로(-Y) 이동
-            // 0.4를 곱해 이미지보다 느리게 움직이도록 설정 (리듬감)
             const parallaxY = progress * 40; 
             heroTextRef.current.style.transform = `translateY(-${parallaxY}vh)`;
           }
         }
       }
 
-      // 2. Generic Sequential Reveal Animation Helper
+      // 2. Business Section Horizontal Scroll Logic
+      if (businessSectionRef.current && businessScrollContainerRef.current) {
+        const rect = businessSectionRef.current.getBoundingClientRect();
+        const totalDistance = rect.height - windowHeight;
+        
+        if (totalDistance > 0) {
+          // 섹션 진입 후 스크롤 진행률 (0.0 ~ 1.0)
+          let progress = -rect.top / totalDistance;
+          progress = Math.min(Math.max(progress, 0), 1);
+          
+          // 가로로 이동할 거리 계산 (컨테이너 너비 - 화면 너비)
+          // 4개의 카드가 있으므로, 대략 화면 너비의 3배 정도 이동해야 함
+          const scrollWidth = businessScrollContainerRef.current.scrollWidth - window.innerWidth;
+          const translateX = progress * scrollWidth;
+          
+          businessScrollContainerRef.current.style.transform = `translateX(-${translateX}px)`;
+        }
+      }
+
+      // 3. Generic Sequential Reveal Helper
       const animateSectionItems = (sectionRef: React.RefObject<HTMLElement>) => {
         if (!sectionRef.current) return;
         
         const rect = sectionRef.current.getBoundingClientRect();
         const totalDistance = rect.height - windowHeight;
         
-        // 섹션 진행률 (0.0 ~ 1.0)
         let progress = -rect.top / totalDistance;
         
         const items = sectionRef.current.querySelectorAll('.reveal-item');
         
-        // [수정됨] 항목 개수에 따라 등장 간격 자동 조절
-        // 항목이 4개보다 많으면(Process 등) 0.15 간격, 아니면 0.25 간격
+        // 동적 간격 조절
         const interval = items.length > 4 ? 0.15 : 0.25;
 
         items.forEach((item, index) => {
-          // 등장 타이밍 계산 (동적 interval 적용)
           const triggerPoint = 0.15 + (index * interval); 
           
           if (progress > triggerPoint) {
@@ -117,7 +131,6 @@ const About: React.FC = () => {
       };
 
       animateSectionItems(whySectionRef);
-      animateSectionItems(businessSectionRef);
       animateSectionItems(processSectionRef);
     };
 
@@ -125,7 +138,7 @@ const About: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 임시 이미지 배열
+  // 임시 이미지 배열 (Process)
   const processImages = [
     "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80", 
     "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", 
@@ -134,14 +147,43 @@ const About: React.FC = () => {
     "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=800&q=80", 
   ];
 
+  // Business Items Data
+  const businessItems = [
+    {
+      id: 1,
+      title: "시네마틱 실사 촬영",
+      sub: "Cinematic Reality",
+      desc: "브랜드의 이야기를 가장 진솔하게 담아내는 힘. 현장의 공기까지 포착하는 인터뷰 촬영부터, 제품의 디테일을 극대화하는 매크로 촬영까지. 우리는 피사체의 본질을 영화적 미장센으로 완성합니다.",
+      img: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1600&q=80" // 촬영 현장
+    },
+    {
+      id: 2,
+      title: "드론 시네마토그래피",
+      sub: "Perspective from Above",
+      desc: "지상에서는 볼 수 없었던 압도적인 스케일. 숙련된 전문가의 드론 컨트롤을 통해 평범한 풍경을 비범한 시각적 경험으로 바꿉니다. 공간의 깊이와 역동성을 더해 영상의 품격을 높이세요.",
+      img: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=1600&q=80" // 드론 뷰
+    },
+    {
+      id: 3,
+      title: "3D 제품 모델링",
+      sub: "Hyper-Realistic Visualization",
+      desc: "실사를 뛰어넘는 완벽한 제어. 물리적으로 촬영 불가능한 제품의 내부 구조나 가상의 공간을 3D로 구현합니다. 빛과 질감을 정교하게 설계하여, 제품이 가진 최상의 아름다움을 시각화합니다.",
+      img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1600&q=80" // 3D 추상
+    },
+    {
+      id: 4,
+      title: "기업 모션그래픽",
+      sub: "Visualizing Vision",
+      desc: "보이지 않는 비전을 보이게 만드는 기술. 복잡한 비즈니스 모델이나 추상적인 데이터를 직관적인 모션그래픽으로 변환합니다. 당신의 기업 가치가 대중에게 명확하고 세련되게 전달되도록 디자인합니다.",
+      img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80" // 테크/그래픽
+    }
+  ];
+
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Hero Section (Parallax Text + Rising Image) */}
+      {/* 1. Hero Section */}
       <section ref={heroSectionRef} className="relative h-[550vh]">
-        
-        {/* Layer 2: Parallax Text (Starts at Bottom, Moves Up) */}
-        {/* justify-center -> justify-end로 변경하여 하단 시작 */}
         <div className="sticky top-0 h-screen w-full flex flex-col justify-end px-4 md:px-6 pb-20 z-20 mix-blend-exclusion text-white pointer-events-none">
           <div ref={heroTextRef} className="max-w-7xl mx-auto w-full pointer-events-auto will-change-transform">
             <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up opacity-80">
@@ -155,7 +197,6 @@ const About: React.FC = () => {
               플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
               다국어 서비스까지 제공하는 <strong className="font-medium">올인원 크리에이티브 그룹</strong>입니다.
             </p>
-            
             <div className="flex flex-wrap gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               {['#All-in-House', '#Global-Ready', '#Cross-Genre'].map((keyword) => (
                 <span key={keyword} className="px-4 py-2 rounded-full border border-white/30 text-sm font-bold bg-white/10">
@@ -166,7 +207,6 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* Layer 1: Rising Image */}
         <div className="absolute inset-0 z-10">
            <div className="sticky top-0 h-screen w-full flex flex-col justify-end overflow-hidden">
               <div 
@@ -186,7 +226,6 @@ const About: React.FC = () => {
       </section>
 
       {/* 2. Why Flair Factory? */}
-      {/* 높이 축소: 800vh -> 600vh (75%) - 사용자가 제공한 코드에선 700vh 였으나 요청사항에 맞춤 */}
       <section ref={whySectionRef} className="relative h-[700vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
@@ -196,7 +235,7 @@ const About: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Point 1 */}
+              {/* Cards (Same as before) */}
               <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Users size={28} />
@@ -208,8 +247,6 @@ const About: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Point 2 */}
               <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Globe size={28} />
@@ -221,8 +258,6 @@ const About: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Point 3 */}
               <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Layers size={28} />
@@ -239,67 +274,61 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Business Areas */}
-      {/* 높이 축소: 800vh -> 600vh (75%) */}
+      {/* 3. Business Areas (Horizontal Sticky Scroll) */}
+      {/* 4개의 카드가 지나가야 하므로 높이를 충분히 확보 (600vh) */}
       <section ref={businessSectionRef} className="relative h-[600vh] bg-background z-30">
-        <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
-          <div className="max-w-7xl mx-auto w-full">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-12 border-b border-primary/10 pb-6">
-              Business Areas
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Area 1 */}
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
-                <div className="flex items-center gap-3 text-primary">
-                  <div className="p-3 bg-surface rounded-lg">
-                    <Video size={24} />
-                  </div>
-                  <h3 className="text-xl font-bold">Film Production</h3>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {['인터뷰 / 제품 촬영', '드론 시네마토그래피', '4K 실시간 송출'].map((item, i) => (
-                    <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Area 2 */}
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
-                <div className="flex items-center gap-3 text-primary">
-                  <div className="p-3 bg-surface rounded-lg">
-                    <MonitorPlay size={24} />
-                  </div>
-                  <h3 className="text-xl font-bold">3D & Motion</h3>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {['3D 제품 모델링 & 렌더링', '기업 소개 애니메이션', '바이럴 모션그래픽'].map((item, i) => (
-                    <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Area 3 */}
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out space-y-6">
-                <div className="flex items-center gap-3 text-primary">
-                  <div className="p-3 bg-surface rounded-lg">
-                    <MessageSquare size={24} />
-                  </div>
-                  <h3 className="text-xl font-bold">Global Strategy</h3>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {['전문 번역가 상주', '다국어 버전 제작', '해외 마케팅 현지화'].map((item, i) => (
-                    <div key={i} className="px-5 py-4 bg-surface/50 border border-primary/5 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:border-primary/30 hover:bg-surface transition-all cursor-default">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
+        <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
+          
+          {/* Header */}
+          <div className="absolute top-0 left-0 w-full px-4 md:px-6 pt-32 z-10 pointer-events-none">
+            <div className="max-w-7xl mx-auto border-b border-primary/10 pb-6">
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Business Areas</h2>
             </div>
+          </div>
+
+          {/* Horizontal Track */}
+          <div 
+            ref={businessScrollContainerRef}
+            className="flex items-center pl-[5vw] pr-[5vw] will-change-transform"
+            style={{ width: 'max-content' }} // 컨텐츠 길이만큼 늘어남
+          >
+            {businessItems.map((item) => (
+              <div 
+                key={item.id} 
+                className="w-[85vw] md:w-[70vw] h-[60vh] md:h-[70vh] flex-shrink-0 mr-[5vw] bg-surface rounded-2xl overflow-hidden border border-primary/5 flex flex-col md:flex-row group"
+              >
+                {/* Left: Image (60%) */}
+                <div className="w-full md:w-[60%] h-1/2 md:h-full relative overflow-hidden">
+                  <img 
+                    src={item.img} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent md:hidden" />
+                </div>
+
+                {/* Right: Content (40%) */}
+                <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-12 flex flex-col justify-center bg-surface border-l border-primary/5">
+                  <span className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
+                    0{item.id}
+                  </span>
+                  <h3 className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm font-bold text-secondary uppercase tracking-wider mb-8">
+                    {item.sub}
+                  </p>
+                  <p className="text-secondary leading-relaxed text-sm md:text-base mb-8">
+                    {item.desc}
+                  </p>
+                  <div className="mt-auto pt-8 border-t border-primary/10">
+                    <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary group-hover:text-primary/70 transition-colors">
+                      View Portfolio <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -328,7 +357,6 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    // [중요] 사용자가 요청한 대로 py-6 유지 (건드리지 않음)
                     className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
@@ -347,7 +375,6 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Floating Image Container */}
           <div 
             ref={cursorImgRef}
             className="fixed top-0 left-0 w-64 h-40 pointer-events-none z-50 overflow-hidden rounded-lg shadow-2xl opacity-0 transition-opacity duration-300"
@@ -364,7 +391,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Partners (Intersection Observer Reveal) */}
+      {/* 5. Partners */}
       <section ref={partnersSectionRef} className="px-4 md:px-6 py-32 bg-background border-t border-primary/5 relative z-30">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
