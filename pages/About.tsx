@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // [NEW] 링크 연결을 위해 import
 import { 
   Users, Globe, Layers, 
   ArrowRight, Sparkles
@@ -7,7 +8,9 @@ import {
 const About: React.FC = () => {
   // --- Process Section Hover Logic ---
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
-  const cursorImgRef = useRef<HTMLDivElement>(null);
+  
+  // [삭제됨] cursorImgRef: 마우스 따라다니는 이미지 컨테이너 제거
+  // const cursorImgRef = useRef<HTMLDivElement>(null); 
 
   // --- Refs for Sections ---
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -16,7 +19,7 @@ const About: React.FC = () => {
   
   const whySectionRef = useRef<HTMLElement>(null);
   
-  // [NEW] Business Section Refs
+  // Business Section Refs
   const businessSectionRef = useRef<HTMLElement>(null);
   const businessScrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -26,18 +29,7 @@ const About: React.FC = () => {
   const partnersSectionRef = useRef<HTMLElement>(null);
   const [isPartnersVisible, setIsPartnersVisible] = useState(false);
 
-  // 마우스 커서 팔로워 (Process 섹션용)
-  useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      if (cursorImgRef.current && activeProcess !== null) {
-        const x = e.clientX + 20; 
-        const y = e.clientY + 20;
-        cursorImgRef.current.style.transform = `translate(${x}px, ${y}px)`;
-      }
-    };
-    window.addEventListener('mousemove', moveCursor);
-    return () => window.removeEventListener('mousemove', moveCursor);
-  }, [activeProcess]);
+  // [삭제됨] 마우스 커서 팔로워 useEffect 제거 (배경 이미지로 대체)
 
   // Partners Intersection Observer
   useEffect(() => {
@@ -90,12 +82,9 @@ const About: React.FC = () => {
         const totalDistance = rect.height - windowHeight;
         
         if (totalDistance > 0) {
-          // 섹션 진입 후 스크롤 진행률 (0.0 ~ 1.0)
           let progress = -rect.top / totalDistance;
           progress = Math.min(Math.max(progress, 0), 1);
           
-          // 가로로 이동할 거리 계산 (컨테이너 너비 - 화면 너비)
-          // 4개의 카드가 있으므로, 대략 화면 너비의 3배 정도 이동해야 함
           const scrollWidth = businessScrollContainerRef.current.scrollWidth - window.innerWidth;
           const translateX = progress * scrollWidth;
           
@@ -138,13 +127,13 @@ const About: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 임시 이미지 배열 (Process)
+  // Process Images (배경으로 사용될 이미지들)
   const processImages = [
-    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80", 
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", 
-    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=800&q=80", 
-    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=800&q=80", 
-    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=800&q=80", 
+    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=2000&q=80", 
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2000&q=80", 
+    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=2000&q=80", 
+    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=2000&q=80", 
+    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=2000&q=80", 
   ];
 
   // Business Items Data
@@ -154,28 +143,28 @@ const About: React.FC = () => {
       title: "시네마틱 실사 촬영",
       sub: "Cinematic Reality",
       desc: "브랜드의 이야기를 가장 진솔하게 담아내는 힘. 현장의 공기까지 포착하는 인터뷰 촬영부터, 제품의 디테일을 극대화하는 매크로 촬영까지. 우리는 피사체의 본질을 영화적 미장센으로 완성합니다.",
-      img: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1600&q=80" // 촬영 현장
+      img: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1600&q=80"
     },
     {
       id: 2,
       title: "드론 시네마토그래피",
       sub: "Perspective from Above",
       desc: "지상에서는 볼 수 없었던 압도적인 스케일. 숙련된 전문가의 드론 컨트롤을 통해 평범한 풍경을 비범한 시각적 경험으로 바꿉니다. 공간의 깊이와 역동성을 더해 영상의 품격을 높이세요.",
-      img: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=1600&q=80" // 드론 뷰
+      img: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=1600&q=80"
     },
     {
       id: 3,
       title: "3D 제품 모델링",
       sub: "Hyper-Realistic Visualization",
       desc: "실사를 뛰어넘는 완벽한 제어. 물리적으로 촬영 불가능한 제품의 내부 구조나 가상의 공간을 3D로 구현합니다. 빛과 질감을 정교하게 설계하여, 제품이 가진 최상의 아름다움을 시각화합니다.",
-      img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1600&q=80" // 3D 추상
+      img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1600&q=80"
     },
     {
       id: 4,
       title: "기업 모션그래픽",
       sub: "Visualizing Vision",
       desc: "보이지 않는 비전을 보이게 만드는 기술. 복잡한 비즈니스 모델이나 추상적인 데이터를 직관적인 모션그래픽으로 변환합니다. 당신의 기업 가치가 대중에게 명확하고 세련되게 전달되도록 디자인합니다.",
-      img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80" // 테크/그래픽
+      img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80"
     }
   ];
 
@@ -235,7 +224,7 @@ const About: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Cards (Same as before) */}
+              {/* Cards */}
               <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Users size={28} />
@@ -275,27 +264,26 @@ const About: React.FC = () => {
       </section>
 
       {/* 3. Business Areas (Horizontal Sticky Scroll) */}
-      {/* 4개의 카드가 지나가야 하므로 높이를 충분히 확보 (600vh) */}
       <section ref={businessSectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
           
-          {/* Header */}
-          <div className="absolute top-0 left-0 w-full px-4 md:px-6 pt-32 z-10 pointer-events-none">
+          {/* Header (z-index 낮춤, 카드랑 안 겹치게) */}
+          <div className="absolute top-0 left-0 w-full px-4 md:px-6 pt-32 pointer-events-none">
             <div className="max-w-7xl mx-auto border-b border-primary/10 pb-6">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Business Areas</h2>
             </div>
           </div>
 
-          {/* Horizontal Track */}
+          {/* Horizontal Track (pt-24 추가해서 헤더랑 간격 띄움) */}
           <div 
             ref={businessScrollContainerRef}
-            className="flex items-center pl-[5vw] pr-[5vw] will-change-transform"
-            style={{ width: 'max-content' }} // 컨텐츠 길이만큼 늘어남
+            className="flex items-center pl-[5vw] pr-[5vw] pt-24 will-change-transform z-10"
+            style={{ width: 'max-content' }}
           >
             {businessItems.map((item) => (
               <div 
                 key={item.id} 
-                className="w-[85vw] md:w-[70vw] h-[60vh] md:h-[70vh] flex-shrink-0 mr-[5vw] bg-surface rounded-2xl overflow-hidden border border-primary/5 flex flex-col md:flex-row group"
+                className="w-[85vw] md:w-[70vw] h-[60vh] md:h-[65vh] flex-shrink-0 mr-[5vw] bg-surface rounded-2xl overflow-hidden border border-primary/5 flex flex-col md:flex-row group"
               >
                 {/* Left: Image (60%) */}
                 <div className="w-full md:w-[60%] h-1/2 md:h-full relative overflow-hidden">
@@ -307,24 +295,24 @@ const About: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent md:hidden" />
                 </div>
 
-                {/* Right: Content (40%) */}
-                <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-12 flex flex-col justify-center bg-surface border-l border-primary/5">
-                  <span className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
+                {/* Right: Content (40%) - 텍스트 크기 축소 */}
+                <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-10 flex flex-col justify-center bg-surface border-l border-primary/5">
+                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-3">
                     0{item.id}
                   </span>
-                  <h3 className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-primary mb-1">
                     {item.title}
                   </h3>
-                  <p className="text-sm font-bold text-secondary uppercase tracking-wider mb-8">
+                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-6">
                     {item.sub}
                   </p>
-                  <p className="text-secondary leading-relaxed text-sm md:text-base mb-8">
+                  <p className="text-secondary leading-relaxed text-sm mb-8">
                     {item.desc}
                   </p>
-                  <div className="mt-auto pt-8 border-t border-primary/10">
-                    <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary group-hover:text-primary/70 transition-colors">
+                  <div className="mt-auto pt-6 border-t border-primary/10">
+                    <Link to="/works" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors">
                       View Portfolio <ArrowRight size={14} />
-                    </span>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -333,10 +321,23 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Process */}
-      {/* 높이 축소: 800vh -> 600vh (75%) */}
-      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30">
-        <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
+      {/* 4. Process (Hover Background Effect) */}
+      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30 transition-colors duration-500">
+        
+        {/* [NEW] Background Image Layer (Hover 시 나타남) */}
+        <div 
+          className="absolute inset-0 z-0 transition-opacity duration-700 pointer-events-none"
+          style={{ 
+            opacity: activeProcess !== null ? 0.3 : 0, // 호버하면 배경 어둡게 보임
+            backgroundImage: activeProcess !== null ? `url(${processImages[activeProcess]})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+        {/* Background Overlay (이미지 위에 텍스트 잘 보이게) */}
+        <div className={`absolute inset-0 bg-background/90 transition-opacity duration-500 z-0 ${activeProcess !== null ? 'opacity-80' : 'opacity-100'}`} />
+
+        <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6 relative z-10">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
               <div className="md:w-1/3">
@@ -357,6 +358,7 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
+                    // py-6 유지
                     className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
@@ -373,20 +375,6 @@ const About: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-
-          <div 
-            ref={cursorImgRef}
-            className="fixed top-0 left-0 w-64 h-40 pointer-events-none z-50 overflow-hidden rounded-lg shadow-2xl opacity-0 transition-opacity duration-300"
-            style={{ opacity: activeProcess !== null ? 1 : 0 }}
-          >
-            {activeProcess !== null && (
-              <img 
-                src={processImages[activeProcess]} 
-                alt="Process" 
-                className="w-full h-full object-cover animate-fade-in"
-              />
-            )}
           </div>
         </div>
       </section>
