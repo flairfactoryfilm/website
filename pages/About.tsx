@@ -1,16 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // [NEW] 링크 연결을 위해 import
+import { Link } from 'react-router-dom';
 import { 
   Users, Globe, Layers, 
-  ArrowRight, Sparkles
+  ArrowRight
 } from 'lucide-react';
 
 const About: React.FC = () => {
   // --- Process Section Hover Logic ---
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
-  
-  // [삭제됨] cursorImgRef: 마우스 따라다니는 이미지 컨테이너 제거
-  // const cursorImgRef = useRef<HTMLDivElement>(null); 
 
   // --- Refs for Sections ---
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -28,8 +25,6 @@ const About: React.FC = () => {
   // Partners Logic
   const partnersSectionRef = useRef<HTMLElement>(null);
   const [isPartnersVisible, setIsPartnersVisible] = useState(false);
-
-  // [삭제됨] 마우스 커서 팔로워 useEffect 제거 (배경 이미지로 대체)
 
   // Partners Intersection Observer
   useEffect(() => {
@@ -55,23 +50,36 @@ const About: React.FC = () => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
 
-      // 1. Hero Section Logic
+      // 1. Hero Section Logic (The Scale-Up)
       if (heroSectionRef.current) {
         const rect = heroSectionRef.current.getBoundingClientRect();
         const totalDistance = rect.height - windowHeight;
 
         if (totalDistance > 0) {
           let progress = -rect.top / totalDistance;
+          // 0 ~ 1 사이로 값 제한 (이미지 크기 제어용)
+          const safeProgress = Math.min(Math.max(progress, 0), 1);
           
+          // [NEW] Scale-Up Animation
           if (imageContainerRef.current) {
-             const clampedProgress = Math.min(Math.max(progress, 0), 1);
-             const currentHeight = Math.min(clampedProgress * 130, 100); 
-             imageContainerRef.current.style.height = `${currentHeight}vh`;
+             // Width: 50vw -> 100vw
+             const currentW = 50 + (safeProgress * 50);
+             // Height: 30vh -> 100vh
+             const currentH = 30 + (safeProgress * 70);
+             // Border Radius: 24px -> 0px (꽉 찰 때 직각으로)
+             const currentRadius = 24 - (safeProgress * 24);
+
+             imageContainerRef.current.style.width = `${currentW}vw`;
+             imageContainerRef.current.style.height = `${currentH}vh`;
+             imageContainerRef.current.style.borderRadius = `${currentRadius}px`;
           }
 
+          // Text Parallax (중앙에서 살짝 위로 이동)
           if (heroTextRef.current) {
-            const parallaxY = progress * 40; 
+            const parallaxY = progress * 30; 
             heroTextRef.current.style.transform = `translateY(-${parallaxY}vh)`;
+            // 스크롤이 끝까지 가면 텍스트 투명도 조절 (선택사항, 여기선 유지)
+            // heroTextRef.current.style.opacity = `${1 - safeProgress}`; 
           }
         }
       }
@@ -127,7 +135,7 @@ const About: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Process Images (배경으로 사용될 이미지들)
+  // Process Images
   const processImages = [
     "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=2000&q=80", 
     "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2000&q=80", 
@@ -171,10 +179,13 @@ const About: React.FC = () => {
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Hero Section */}
+      {/* 1. Hero Section (Scale-Up Center Expansion) */}
       <section ref={heroSectionRef} className="relative h-[550vh]">
-        <div className="sticky top-0 h-screen w-full flex flex-col justify-end px-4 md:px-6 pb-20 z-20 mix-blend-exclusion text-white pointer-events-none">
-          <div ref={heroTextRef} className="max-w-7xl mx-auto w-full pointer-events-auto will-change-transform">
+        {/* Sticky Container: Centers everything */}
+        <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+          
+          {/* Layer 2: Text Overlay (Centered & Parallax) */}
+          <div ref={heroTextRef} className="absolute z-20 flex flex-col items-center justify-center text-center mix-blend-exclusion text-white pointer-events-none w-full px-4">
             <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up opacity-80">
               Who We Are
             </span>
@@ -186,7 +197,7 @@ const About: React.FC = () => {
               플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
               다국어 서비스까지 제공하는 <strong className="font-medium">올인원 크리에이티브 그룹</strong>입니다.
             </p>
-            <div className="flex flex-wrap gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+            <div className="flex flex-wrap justify-center gap-3 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               {['#All-in-House', '#Global-Ready', '#Cross-Genre'].map((keyword) => (
                 <span key={keyword} className="px-4 py-2 rounded-full border border-white/30 text-sm font-bold bg-white/10">
                   {keyword}
@@ -194,23 +205,22 @@ const About: React.FC = () => {
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="absolute inset-0 z-10">
-           <div className="sticky top-0 h-screen w-full flex flex-col justify-end overflow-hidden">
-              <div 
-                ref={imageContainerRef} 
-                className="w-full absolute bottom-0 left-0 transition-height duration-75 ease-linear will-change-[height]"
-                style={{ height: '0vh' }} 
-              >
-                <img 
-                  src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
-                  alt="Cinematic View" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40" />
-              </div>
-           </div>
+          {/* Layer 1: Expanding Image Box (Starts small, grows to full screen) */}
+          <div 
+            ref={imageContainerRef} 
+            className="relative z-10 overflow-hidden shadow-2xl transition-all duration-75 ease-linear will-change-[width,height,border-radius]"
+            style={{ width: '50vw', height: '30vh', borderRadius: '24px' }} 
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
+              alt="Cinematic View" 
+              className="w-full h-full object-cover"
+            />
+            {/* Dark Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-black/30" />
+          </div>
+
         </div>
       </section>
 
@@ -267,14 +277,14 @@ const About: React.FC = () => {
       <section ref={businessSectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
           
-          {/* Header (z-index 낮춤, 카드랑 안 겹치게) */}
+          {/* Header */}
           <div className="absolute top-0 left-0 w-full px-4 md:px-6 pt-32 pointer-events-none">
             <div className="max-w-7xl mx-auto border-b border-primary/10 pb-6">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Business Areas</h2>
             </div>
           </div>
 
-          {/* Horizontal Track (pt-24 추가해서 헤더랑 간격 띄움) */}
+          {/* Horizontal Track (pt-24 for spacing) */}
           <div 
             ref={businessScrollContainerRef}
             className="flex items-center pl-[5vw] pr-[5vw] pt-24 will-change-transform z-10"
@@ -295,7 +305,7 @@ const About: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent md:hidden" />
                 </div>
 
-                {/* Right: Content (40%) - 텍스트 크기 축소 */}
+                {/* Right: Content (40%) */}
                 <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-10 flex flex-col justify-center bg-surface border-l border-primary/5">
                   <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-3">
                     0{item.id}
@@ -324,17 +334,17 @@ const About: React.FC = () => {
       {/* 4. Process (Hover Background Effect) */}
       <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30 transition-colors duration-500">
         
-        {/* [NEW] Background Image Layer (Hover 시 나타남) */}
+        {/* Background Image Layer */}
         <div 
           className="absolute inset-0 z-0 transition-opacity duration-700 pointer-events-none"
           style={{ 
-            opacity: activeProcess !== null ? 0.3 : 0, // 호버하면 배경 어둡게 보임
+            opacity: activeProcess !== null ? 0.3 : 0, 
             backgroundImage: activeProcess !== null ? `url(${processImages[activeProcess]})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
         />
-        {/* Background Overlay (이미지 위에 텍스트 잘 보이게) */}
+        {/* Background Overlay */}
         <div className={`absolute inset-0 bg-background/90 transition-opacity duration-500 z-0 ${activeProcess !== null ? 'opacity-80' : 'opacity-100'}`} />
 
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6 relative z-10">
@@ -358,7 +368,6 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    // py-6 유지
                     className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
