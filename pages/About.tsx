@@ -49,8 +49,10 @@ const About: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
+      const isMobile = window.innerWidth < 768; // 모바일 체크
 
-      // 1. Hero Section Logic (CSS Sticky used, removed JS logic for optimization)
+      // 1. Hero Section Logic
+      // (CSS Sticky 사용됨)
 
       // 2. Business Section Horizontal Scroll Logic
       if (businessSectionRef.current && businessScrollContainerRef.current) {
@@ -69,34 +71,37 @@ const About: React.FC = () => {
       }
 
       // 3. Generic Sequential Reveal Helper
-      const animateSectionItems = (sectionRef: React.RefObject<HTMLElement>) => {
-        if (!sectionRef.current) return;
-        
-        const rect = sectionRef.current.getBoundingClientRect();
-        const totalDistance = rect.height - windowHeight;
-        
-        let progress = -rect.top / totalDistance;
-        
-        const items = sectionRef.current.querySelectorAll('.reveal-item');
-        
-        // 동적 간격 조절
-        const interval = items.length > 4 ? 0.15 : 0.25;
-
-        items.forEach((item, index) => {
-          const triggerPoint = 0.15 + (index * interval); 
+      // 모바일이 아닐 때만 스크롤 애니메이션 작동 (모바일은 기본 표시)
+      if (!isMobile) {
+        const animateSectionItems = (sectionRef: React.RefObject<HTMLElement>) => {
+          if (!sectionRef.current) return;
           
-          if (progress > triggerPoint) {
-            (item as HTMLElement).style.opacity = '1';
-            (item as HTMLElement).style.transform = 'translateY(0)';
-          } else {
-            (item as HTMLElement).style.opacity = '0';
-            (item as HTMLElement).style.transform = 'translateY(40px)';
-          }
-        });
-      };
+          const rect = sectionRef.current.getBoundingClientRect();
+          const totalDistance = rect.height - windowHeight;
+          
+          let progress = -rect.top / totalDistance;
+          
+          const items = sectionRef.current.querySelectorAll('.reveal-item');
+          
+          // 동적 간격 조절
+          const interval = items.length > 4 ? 0.15 : 0.25;
 
-      animateSectionItems(whySectionRef);
-      animateSectionItems(processSectionRef);
+          items.forEach((item, index) => {
+            const triggerPoint = 0.15 + (index * interval); 
+            
+            if (progress > triggerPoint) {
+              (item as HTMLElement).style.opacity = '1';
+              (item as HTMLElement).style.transform = 'translateY(0)';
+            } else {
+              (item as HTMLElement).style.opacity = '0';
+              (item as HTMLElement).style.transform = 'translateY(40px)';
+            }
+          });
+        };
+
+        animateSectionItems(whySectionRef);
+        animateSectionItems(processSectionRef);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -140,9 +145,6 @@ const About: React.FC = () => {
       
       {/* 1. Hero Section (Sticky Parallax / Overlay) */}
       <section className="relative h-[200vh] bg-background">
-        
-        {/* Layer 1: Text (Sticky, On Top with Blend Mode) */}
-        {/* z-20으로 올려서 이미지 위로 오게 하고, mix-blend-exclusion 적용 */}
         <div className="sticky top-0 h-screen flex flex-col justify-center items-center text-center px-4 md:px-6 z-20 mix-blend-exclusion text-white">
           <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up">
             Who We Are
@@ -157,31 +159,33 @@ const About: React.FC = () => {
           </p>
         </div>
 
-        {/* Layer 2: Image (Scrolls up from bottom) */}
-        {/* z-10으로 설정하여 텍스트 아래에 위치 */}
         <div className="absolute bottom-0 w-full h-screen z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
            <img 
              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
              alt="Cinematic View" 
              className="w-full h-full object-cover"
            />
-           {/* 이미지 자체를 살짝 어둡게 눌러주어 흰색 텍스트와 합성 시 가독성 보조 */}
            <div className="absolute inset-0 bg-black/20" />
         </div>
       </section>
 
       {/* 2. Why Flair Factory? */}
-      <section ref={whySectionRef} className="relative h-[700vh] bg-background z-30">
-        <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
+      {/* 모바일: h-auto (스티키 해제, 그냥 쌓임), 데스크탑: h-[700vh] (스티키 작동) */}
+      <section ref={whySectionRef} className="relative h-auto md:h-[700vh] bg-background z-30">
+        
+        {/* 모바일: relative & 기본 패딩, 데스크탑: sticky & h-screen */}
+        <div className="relative md:sticky top-0 h-auto md:h-screen flex flex-col pt-24 md:pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+            
+            {/* 모바일: 좌측 정렬(items-start), 데스크탑: 우측 하단 정렬(items-end) */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Why Flair Factory?</h2>
               <p className="text-sm text-secondary uppercase tracking-widest mt-4 md:mt-0">Our Core Competencies</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Cards */}
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20 md:pb-0">
+              {/* Cards - 모바일에서는 opacity-100으로 기본 표시 */}
+              <div className="reveal-item opacity-100 md:opacity-0 translate-y-0 md:translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Users size={28} />
                 </div>
@@ -192,7 +196,7 @@ const About: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
+              <div className="reveal-item opacity-100 md:opacity-0 translate-y-0 md:translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Globe size={28} />
                 </div>
@@ -203,7 +207,7 @@ const About: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
+              <div className="reveal-item opacity-100 md:opacity-0 translate-y-0 md:translate-y-10 transition-all duration-1000 ease-out group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between">
                 <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                   <Layers size={28} />
                 </div>
@@ -230,10 +234,10 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Horizontal Track (pt-24 추가해서 헤더랑 간격 띄움) */}
+          {/* Horizontal Track - 모바일 간격 확보 (pt-40), 데스크탑 (pt-24) */}
           <div 
             ref={businessScrollContainerRef}
-            className="flex items-center pl-[5vw] pr-[5vw] pt-24 will-change-transform z-10"
+            className="flex items-center pl-[5vw] pr-[5vw] pt-40 md:pt-24 will-change-transform z-10"
             style={{ width: 'max-content' }}
           >
             {businessItems.map((item) => (
@@ -252,17 +256,15 @@ const About: React.FC = () => {
                 </div>
 
                 {/* Right: Content (40%) */}
-                <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-10 flex flex-col justify-center bg-surface border-l border-primary/5">
-                  {/* 숫자(ID) 삭제됨 */}
+                <div className="w-full md:w-[40%] h-1/2 md:h-full p-6 md:p-10 flex flex-col justify-center bg-surface border-l border-primary/5">
                   
-                  {/* 타이틀 크기 축소: text-xl md:text-2xl, 간격 mb-3 */}
                   <h3 className="text-xl md:text-2xl font-display font-bold text-primary mb-3">
                     {item.title}
                   </h3>
                   <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-6">
                     {item.sub}
                   </p>
-                  <p className="text-secondary leading-relaxed text-sm mb-8">
+                  <p className="text-secondary leading-relaxed text-sm mb-8 line-clamp-3 md:line-clamp-none">
                     {item.desc}
                   </p>
                   <div className="mt-auto pt-6 border-t border-primary/10">
@@ -277,9 +279,12 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Process (Hover Background Removed) */}
-      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30">
-        <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6 relative z-10">
+      {/* 4. Process */}
+      {/* 모바일: h-auto (스티키 해제), 데스크탑: h-[600vh] */}
+      <section ref={processSectionRef} className="relative h-auto md:h-[600vh] bg-background z-30">
+        
+        {/* 모바일: relative, 데스크탑: sticky */}
+        <div className="relative md:sticky top-0 h-auto md:h-screen flex flex-col pt-24 md:pt-32 px-4 md:px-6 relative z-10">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
               <div className="md:w-1/3">
@@ -290,7 +295,7 @@ const About: React.FC = () => {
                 </p>
               </div>
               
-              <div className="md:w-2/3 space-y-4">
+              <div className="md:w-2/3 space-y-4 pb-20 md:pb-0">
                 {[
                   { step: '01', title: 'Kick-off Meeting', desc: '프로젝트 목표 및 니즈 정밀 분석' },
                   { step: '02', title: 'Planning & Strategy', desc: '기획안 및 스토리보드 구성' },
@@ -300,7 +305,8 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
+                    // 모바일: opacity-100 (애니메이션 없이 보임)
+                    className="reveal-item opacity-100 md:opacity-0 translate-y-0 md:translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
                   >
@@ -327,7 +333,7 @@ const About: React.FC = () => {
             Trusted Partners
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {['Trade World', 'Denotisia', 'Partner A', 'Partner B', 'Partner C'].map((partner, i) => (
+            {['Partner A', 'Partner B', 'Partner C', 'Partner D', 'Partner E', 'Partner F', 'Partner G'].map((partner, i) => (
               <div 
                 key={i} 
                 className={`h-24 bg-surface rounded-lg flex items-center justify-center text-primary/30 font-bold border border-primary/5 hover:border-primary/20 transition-all duration-700
