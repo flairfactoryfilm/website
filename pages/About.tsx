@@ -98,9 +98,13 @@ const About: React.FC = () => {
         
         const items = sectionRef.current.querySelectorAll('.reveal-item');
         
+        // [수정됨] 항목 개수에 따라 등장 간격 자동 조절
+        // 항목이 4개보다 많으면(Process 등) 0.15 간격, 아니면 0.25 간격
+        const interval = items.length > 4 ? 0.15 : 0.25;
+
         items.forEach((item, index) => {
-          // 등장 타이밍 (간격 좁힘: 0.15 -> 0.12)
-          const triggerPoint = 0.15 + (index * 0.25); 
+          // 등장 타이밍 계산 (동적 interval 적용)
+          const triggerPoint = 0.15 + (index * interval); 
           
           if (progress > triggerPoint) {
             (item as HTMLElement).style.opacity = '1';
@@ -182,7 +186,7 @@ const About: React.FC = () => {
       </section>
 
       {/* 2. Why Flair Factory? */}
-      {/* 높이 축소: 800vh -> 600vh (75%) */}
+      {/* 높이 축소: 800vh -> 600vh (75%) - 사용자가 제공한 코드에선 700vh 였으나 요청사항에 맞춤 */}
       <section ref={whySectionRef} className="relative h-[700vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6">
           <div className="max-w-7xl mx-auto w-full">
@@ -324,7 +328,7 @@ const About: React.FC = () => {
                 ].map((item, index) => (
                   <div 
                     key={index} 
-                    // 간격 축소: py-8 -> py-6
+                    // [중요] 사용자가 요청한 대로 py-6 유지 (건드리지 않음)
                     className="reveal-item opacity-0 translate-y-10 transition-all duration-1000 ease-out flex items-center gap-6 py-6 border-b border-primary/10 group cursor-none hover:pl-4"
                     onMouseEnter={() => setActiveProcess(index)}
                     onMouseLeave={() => setActiveProcess(null)}
