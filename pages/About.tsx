@@ -10,7 +10,9 @@ const About: React.FC = () => {
   const [activeProcess, setActiveProcess] = useState<number | null>(null);
 
   // --- Refs for Sections ---
-  // [수정] Hero 섹션은 이제 CSS Sticky를 사용하므로 불필요한 ref 제거
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const heroTextRef = useRef<HTMLDivElement>(null); 
   
   const whySectionRef = useRef<HTMLElement>(null);
   
@@ -48,8 +50,7 @@ const About: React.FC = () => {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
 
-      // 1. Hero Section Logic
-      // [수정] Idea 4는 CSS sticky + flow를 사용하므로 JS 계산 로직 제거함 (성능 최적화)
+      // 1. Hero Section Logic (CSS Sticky used, removed JS logic for optimization)
 
       // 2. Business Section Horizontal Scroll Logic
       if (businessSectionRef.current && businessScrollContainerRef.current) {
@@ -102,15 +103,6 @@ const About: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Process Images (배경으로 사용될 이미지들)
-  const processImages = [
-    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=2000&q=80", 
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2000&q=80", 
-    "https://images.unsplash.com/photo-1601506521937-244b01c84346?auto=format&fit=crop&w=2000&q=80", 
-    "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44c?auto=format&fit=crop&w=2000&q=80", 
-    "https://images.unsplash.com/photo-1512428559087-560fa0cec34e?auto=format&fit=crop&w=2000&q=80", 
-  ];
-
   // Business Items Data
   const businessItems = [
     {
@@ -147,34 +139,33 @@ const About: React.FC = () => {
     <div className="w-full animate-fade-in pb-20">
       
       {/* 1. Hero Section (Sticky Parallax / Overlay) */}
-      {/* 높이를 200vh로 설정하여 스크롤 시 이미지가 덮이는 공간 확보 */}
       <section className="relative h-[200vh] bg-background">
         
-        {/* Layer 1: Text (Sticky, Stay behind) */}
-        {/* z-0으로 설정하여 올라오는 이미지 뒤에 위치 */}
-        <div className="sticky top-0 h-screen flex flex-col justify-center items-center text-center px-4 md:px-6 z-0">
-          <span className="block text-xs font-bold text-secondary uppercase tracking-widest mb-4 animate-slide-up">
+        {/* Layer 1: Text (Sticky, On Top with Blend Mode) */}
+        {/* z-20으로 올려서 이미지 위로 오게 하고, mix-blend-exclusion 적용 */}
+        <div className="sticky top-0 h-screen flex flex-col justify-center items-center text-center px-4 md:px-6 z-20 mix-blend-exclusion text-white">
+          <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up">
             Who We Are
           </span>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-primary leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] mb-8 break-keep animate-slide-up" style={{ animationDelay: '0.1s' }}>
             Boundless Creativity,<br />
-            <span className="text-secondary/60">One Unified Team.</span>
+            <span className="opacity-60">One Unified Team.</span>
           </h1>
-          <p className="text-lg md:text-xl text-secondary font-light max-w-2xl leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <p className="text-lg md:text-xl font-light max-w-2xl leading-relaxed animate-slide-up opacity-90" style={{ animationDelay: '0.2s' }}>
             플레어 팩토리는 영상 제작을 넘어 비디오 전략, 디지털 마케팅, 
-            다국어 서비스까지 제공하는 <strong className="text-primary font-medium">올인원 크리에이티브 그룹</strong>입니다.
+            다국어 서비스까지 제공하는 <strong className="font-medium">올인원 크리에이티브 그룹</strong>입니다.
           </p>
-          {/* 태그 삭제됨 */}
         </div>
 
-        {/* Layer 2: Image (Scrolls up over text) */}
-        {/* z-10으로 설정하여 텍스트 위를 덮음. absolute bottom-0으로 섹션 하단에 배치 */}
+        {/* Layer 2: Image (Scrolls up from bottom) */}
+        {/* z-10으로 설정하여 텍스트 아래에 위치 */}
         <div className="absolute bottom-0 w-full h-screen z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
            <img 
              src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80" 
              alt="Cinematic View" 
              className="w-full h-full object-cover"
            />
+           {/* 이미지 자체를 살짝 어둡게 눌러주어 흰색 텍스트와 합성 시 가독성 보조 */}
            <div className="absolute inset-0 bg-black/20" />
         </div>
       </section>
@@ -239,7 +230,7 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Horizontal Track */}
+          {/* Horizontal Track (pt-24 추가해서 헤더랑 간격 띄움) */}
           <div 
             ref={businessScrollContainerRef}
             className="flex items-center pl-[5vw] pr-[5vw] pt-24 will-change-transform z-10"
@@ -262,10 +253,10 @@ const About: React.FC = () => {
 
                 {/* Right: Content (40%) */}
                 <div className="w-full md:w-[40%] h-1/2 md:h-full p-8 md:p-10 flex flex-col justify-center bg-surface border-l border-primary/5">
-                  <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-3">
-                    0{item.id}
-                  </span>
-                  <h3 className="text-2xl md:text-3xl font-display font-bold text-primary mb-1">
+                  {/* 숫자(ID) 삭제됨 */}
+                  
+                  {/* 타이틀 크기 축소: text-xl md:text-2xl, 간격 mb-3 */}
+                  <h3 className="text-xl md:text-2xl font-display font-bold text-primary mb-3">
                     {item.title}
                   </h3>
                   <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-6">
@@ -286,22 +277,8 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Process (Hover Background Effect) */}
-      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30 transition-colors duration-500">
-        
-        {/* Background Image Layer */}
-        <div 
-          className="absolute inset-0 z-0 transition-opacity duration-700 pointer-events-none"
-          style={{ 
-            opacity: activeProcess !== null ? 0.3 : 0, 
-            backgroundImage: activeProcess !== null ? `url(${processImages[activeProcess]})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-        {/* Background Overlay */}
-        <div className={`absolute inset-0 bg-background/90 transition-opacity duration-500 z-0 ${activeProcess !== null ? 'opacity-80' : 'opacity-100'}`} />
-
+      {/* 4. Process (Hover Background Removed) */}
+      <section ref={processSectionRef} className="relative h-[600vh] bg-background z-30">
         <div className="sticky top-0 h-screen flex flex-col pt-32 px-4 md:px-6 relative z-10">
           <div className="max-w-7xl mx-auto w-full">
             <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
