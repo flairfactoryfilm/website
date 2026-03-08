@@ -133,10 +133,10 @@ const Contact: React.FC = () => {
              <h4 className="text-xs font-display font-bold uppercase tracking-widest text-primary/40 mb-4">Address</h4>
              <div className="group flex items-start gap-3 w-fit">
                <address className="text-lg md:text-xl text-primary not-italic font-medium">
-                 서울특별시 강동구 성안로 92 4층
+                 서울 강동구 진황도로 172 3층
                </address>
                <button 
-                 onClick={() => handleCopy('서울특별시 강동구 성안로 92 4층', 'address')}
+                 onClick={() => handleCopy('서울 강동구 진황도로 172 3층', 'address')}
                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-secondary hover:text-primary mt-1"
                  aria-label="Copy Address"
                >
