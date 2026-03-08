@@ -170,7 +170,7 @@ const About: React.FC = () => {
       </section>
 
       {/* 2. Why Flair Factory? */}
-      {/* 모바일: h-auto (스티키 해제, 그냥 쌓임), 데스크탑: h-[200vh] (스티키 작동) */}
+      {/* 모바일: h-auto (스티키 해제, 그냥 쌓임), 데스크탑: h-[400vh] (스티키 작동) */}
       <section ref={whySectionRef} className="relative h-auto md:h-[400vh] bg-background z-30">
         
         {/* 모바일: relative & 기본 패딩, 데스크탑: sticky & h-screen */}
