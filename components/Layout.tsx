@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X, Sun, Moon } from 'lucide-react';
+import { getActivePopup } from '../services/dataService'; // [NEW] 팝업 데이터 호출 함수
+import { Popup } from '../types'; // [NEW] 팝업 타입
 
 // Original SVG Logo (절대 수정 금지 - 유지)
 const LogoSvg = ({ className }: { className?: string }) => (
@@ -19,6 +21,11 @@ const Layout: React.FC = () => {
     return 'dark';
   });
 
+  // --- [NEW] Popup State ---
+  const [popupData, setPopupData] = useState<Popup | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [hideFor24Hours, setHideFor24Hours] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -35,6 +42,39 @@ const Layout: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  // --- [NEW] Popup Fetch Logic ---
+  useEffect(() => {
+    const fetchPopup = async () => {
+      try {
+        const activePopup = await getActivePopup();
+        if (activePopup) {
+          // 로컬 스토리지에서 해당 팝업의 만료 시간 확인
+          const hideUntil = localStorage.getItem(`hidePopup_${activePopup.id}`);
+          if (hideUntil && Date.now() < parseInt(hideUntil, 10)) {
+            return; // 24시간이 아직 안 지났으면 팝업을 띄우지 않음
+          } else {
+            localStorage.removeItem(`hidePopup_${activePopup.id}`); // 시간 지났으면 기존 데이터 삭제
+          }
+          
+          setPopupData(activePopup);
+          setIsPopupOpen(true);
+        }
+      } catch (error) {
+        console.error("Popup fetch error:", error);
+      }
+    };
+    fetchPopup();
+  }, []);
+
+  const closePopup = () => {
+    if (hideFor24Hours && popupData) {
+      // 체크박스가 선택된 상태로 닫으면 현재 시간 기준 24시간 뒤의 시간을 저장
+      const tomorrow = Date.now() + (24 * 60 * 60 * 1000);
+      localStorage.setItem(`hidePopup_${popupData.id}`, tomorrow.toString());
+    }
+    setIsPopupOpen(false);
   };
 
   const navLinks = [
@@ -137,6 +177,46 @@ const Layout: React.FC = () => {
 
         </div>
       </footer>
+
+      {/* --- [NEW] Global Popup Component --- */}
+      {isPopupOpen && popupData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="bg-surface w-full max-w-md rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
+            data-lenis-prevent 
+          >
+            <button onClick={closePopup} className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors">
+              <X size={18} />
+            </button>
+
+            {/* 이미지가 있을 때만 노출, 링크가 있으면 a태그로 감싸기 */}
+            {popupData.image_url && (
+              popupData.link_url ? (
+                <a href={popupData.link_url} target="_blank" rel="noreferrer" className="relative w-full aspect-[4/3] block group">
+                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                </a>
+              ) : (
+                <div className="relative w-full aspect-[4/3]">
+                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-full object-cover" />
+                </div>
+              )
+            )}
+            
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-primary mb-2">{popupData.title}</h3>
+              {popupData.content && <p className="text-secondary text-sm leading-relaxed mb-6 whitespace-pre-wrap">{popupData.content}</p>}
+
+              <div className="flex items-center justify-between pt-4 border-t border-primary/5">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="checkbox" className="w-4 h-4 accent-primary rounded cursor-pointer" checked={hideFor24Hours} onChange={(e) => setHideFor24Hours(e.target.checked)} />
+                  <span className="text-xs text-secondary group-hover:text-primary transition-colors">24시간 동안 보지 않기</span>
+                </label>
+                <button onClick={closePopup} className="text-sm font-bold text-primary hover:opacity-70 transition-opacity">닫기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
