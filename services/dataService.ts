@@ -173,3 +173,40 @@ export const uploadImage = async (file: File): Promise<string> => {
 
   return data.publicUrl;
 };
+
+import { Popup } from '../types';
+
+// 모든 팝업 가져오기 (관리자용)
+export const getPopups = async () => {
+  const { data, error } = await supabase.from('popups').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+// 현재 활성화된 팝업 딱 1개만 가져오기 (사용자용)
+export const getActivePopup = async () => {
+  const { data, error } = await supabase.from('popups').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1).single();
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116은 '결과 없음' 에러이므로 무시
+  return data;
+};
+
+export const createPopup = async (popup: Popup) => {
+  // 만약 이 팝업을 활성화한다면, 기존 팝업들은 비활성화 처리 (팝업은 1개만 뜨게)
+  if (popup.is_active) await supabase.from('popups').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+  const { data, error } = await supabase.from('popups').insert([popup]);
+  if (error) throw error;
+  return data;
+};
+
+export const updatePopup = async (popup: Popup) => {
+  if (popup.is_active) await supabase.from('popups').update({ is_active: false }).neq('id', popup.id);
+  const { data, error } = await supabase.from('popups').update(popup).eq('id', popup.id);
+  if (error) throw error;
+  return data;
+};
+
+export const deletePopup = async (id: string) => {
+  const { data, error } = await supabase.from('popups').delete().eq('id', id);
+  if (error) throw error;
+  return data;
+};
