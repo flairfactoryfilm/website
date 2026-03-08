@@ -667,14 +667,41 @@ const Admin: React.FC = () => {
                 <label className="text-xs font-bold text-secondary uppercase">Link URL (Optional)</label>
                 <input className="w-full bg-background border p-3 rounded-lg text-primary" value={currentPopup.link_url || ''} onChange={e => setCurrentPopup({...currentPopup, link_url: e.target.value})} placeholder="https://..." />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-secondary uppercase">Image</label>
-                <div className="flex items-center gap-4">
-                  {currentPopup.image_url && <img src={currentPopup.image_url} alt="Popup" className="w-20 h-20 object-cover rounded border" />}
-                  <input type="file" accept="image/*" onChange={handlePopupImageUpload} disabled={isUploading} className="text-sm" />
-                  {isUploading && <Loader2 size={16} className="animate-spin text-primary" />}
-                </div>
-              </div>
+              <div className="space-y-4">
+  <label className="text-xs font-bold text-secondary uppercase">Image</label>
+  
+  {/* 예쁜 업로드 영역 (프로젝트 탭과 동일한 스타일) */}
+  <div className="relative border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
+     {isUploading && (
+         <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-xl">
+             <div className="flex flex-col items-center gap-2">
+                 <Loader2 className="animate-spin text-primary" size={24}/>
+                 <span className="text-xs font-bold text-primary">Uploading...</span>
+             </div>
+         </div>
+     )}
+    <input 
+      type="file" 
+      id="popup-image-upload" 
+      accept="image/*" 
+      className="hidden" 
+      onChange={handlePopupImageUpload}
+      disabled={isUploading}
+    />
+    <label htmlFor="popup-image-upload" className={`cursor-pointer flex flex-col items-center gap-2 ${isUploading ? 'opacity-50' : ''}`}>
+      <Upload size={32} className="text-primary/40" />
+      <span className="text-sm font-bold text-primary">클릭 또는 드래그하여 이미지 업로드</span>
+      <span className="text-xs text-secondary">JPG, PNG, WEBP 지원</span>
+    </label>
+  </div>
+
+  {/* 업로드된 이미지 미리보기 */}
+  {currentPopup.image_url && (
+    <div className="relative w-full max-w-[200px] rounded-lg overflow-hidden border border-primary/10">
+      <img src={currentPopup.image_url} alt="Popup Preview" className="w-full h-auto object-cover" />
+    </div>
+  )}
+</div>
               <label className="flex items-center gap-3 cursor-pointer border-t pt-4 border-primary/5">
                 <input type="checkbox" className="w-5 h-5 accent-primary" checked={currentPopup.is_active || false} onChange={e => setCurrentPopup({...currentPopup, is_active: e.target.checked})} />
                 <span className="text-sm font-bold text-primary">메인 화면에 활성화 (체크 시 다른 팝업은 비활성화됨)</span>
