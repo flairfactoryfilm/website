@@ -10,12 +10,16 @@ import {
   renameTag,
   addTag,
   deleteTag,
-  uploadImage
+  uploadImage,
+  getPopups,      // [NEW]
+  createPopup,    // [NEW]
+  updatePopup,    // [NEW]
+  deletePopup     // [NEW]
 } from '../services/dataService';
-import { Project } from '../types';
+import { Project, Popup } from '../types'; // [NEW] Popup 타입 추가
 import { 
   Shield, Plus, Edit2, Trash2, Mail, LayoutGrid, Tags, 
-  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar
+  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar, MessageSquare
 } from 'lucide-react';
 
 const Admin: React.FC = () => {
@@ -26,15 +30,17 @@ const Admin: React.FC = () => {
   const [password, setPassword] = useState('');
 
   // --- UI State ---
-  const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries'>('works');
+  const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries' | 'popups'>('works'); // [NEW] popups 추가
    
   // --- Data State ---
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [availableTags, setAvailableTags] = useState<{industry: string[], type: string[]}>({ industry: [], type: [] });
+  const [popups, setPopups] = useState<Popup[]>([]); // [NEW] 팝업 데이터
    
   // --- Modal & Form State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPopupModalOpen, setIsPopupModalOpen] = useState(false); // [NEW] 팝업 모달
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isUploading, setIsUploading] = useState(false);
    
@@ -43,9 +49,10 @@ const Admin: React.FC = () => {
     type_tags: [],
     images: [] 
   });
+
+  const [currentPopup, setCurrentPopup] = useState<Partial<Popup>>({ is_active: false }); // [NEW] 팝업 상태
    
   // Work Date String for Input (YYYY-MM)
-  // DB의 'YYYY-MM-DD'를 input type="month"에 맞는 'YYYY-MM'으로 변환해서 관리
   const [workDateInput, setWorkDateInput] = useState('');
 
   // --- Tag Management State ---
@@ -56,14 +63,15 @@ const Admin: React.FC = () => {
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
 
   // --- Alert State ---
-  const [deleteAlert, setDeleteAlert] = useState<{ isOpen: boolean, projectId: string | null }>({ isOpen: false, projectId: null });
+  // [수정] projectId -> id로 범용성 있게 변경, type 필드 추가
+  const [deleteAlert, setDeleteAlert] = useState<{ isOpen: boolean, id: string | null, type: 'project' | 'popup' }>({ isOpen: false, id: null, type: 'project' });
 
   // --- Initialization ---
-
   const refreshData = () => {
     getProjects().then(setProjects);
     getContacts().then(setContacts);
     getAllTags().then(setAvailableTags);
+    getPopups().then(setPopups); // [NEW] 팝업 갱신
   };
 
   useEffect(() => {
@@ -84,7 +92,6 @@ const Admin: React.FC = () => {
   }, []);
 
   // --- Auth Handlers ---
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.auth.signInWithPassword({
@@ -102,7 +109,6 @@ const Admin: React.FC = () => {
   };
 
   // --- Project Handlers ---
-
   const handleEditClick = (project: Project) => {
     setCurrentProject({ ...project, images: project.images || [] });
     // YYYY-MM-DD -> YYYY-MM 변환
@@ -123,14 +129,18 @@ const Admin: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteAlert({ isOpen: true, projectId: id });
+  const handleDeleteClick = (id: string, type: 'project' | 'popup') => {
+    setDeleteAlert({ isOpen: true, id, type });
   };
 
   const confirmDelete = async () => {
-    if (deleteAlert.projectId) {
-      await deleteProject(deleteAlert.projectId);
-      setDeleteAlert({ isOpen: false, projectId: null });
+    if (deleteAlert.id) {
+      if (deleteAlert.type === 'project') {
+        await deleteProject(deleteAlert.id);
+      } else if (deleteAlert.type === 'popup') {
+        await deletePopup(deleteAlert.id);
+      }
+      setDeleteAlert({ isOpen: false, id: null, type: 'project' });
       refreshData();
     }
   };
@@ -169,8 +179,46 @@ const Admin: React.FC = () => {
     }
   };
 
-  // --- Image Handling (Real Upload) ---
+  // --- [NEW] Popup Handlers ---
+  const handleAddPopupClick = () => {
+    setCurrentPopup({ title: '', content: '', image_url: '', link_url: '', is_active: false });
+    setModalMode('add');
+    setIsPopupModalOpen(true);
+  };
 
+  const handleEditPopupClick = (popup: Popup) => {
+    setCurrentPopup({ ...popup });
+    setModalMode('edit');
+    setIsPopupModalOpen(true);
+  };
+
+  const handlePopupModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (modalMode === 'add') await createPopup(currentPopup as Popup);
+      else await updatePopup(currentPopup as Popup);
+      setIsPopupModalOpen(false);
+      refreshData();
+    } catch (error: any) { alert("저장 실패: " + error.message); }
+  };
+
+  const togglePopupActive = async (popup: Popup) => {
+    await updatePopup({ ...popup, is_active: !popup.is_active });
+    refreshData();
+  };
+
+  const handlePopupImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setIsUploading(true);
+      try {
+        const url = await uploadImage(e.target.files[0]);
+        setCurrentPopup(prev => ({ ...prev, image_url: url }));
+      } catch (error: any) { alert("업로드 실패: " + error.message); } 
+      finally { setIsUploading(false); }
+    }
+  };
+
+  // --- Image Handling (Real Upload) ---
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setIsUploading(true);
@@ -217,7 +265,6 @@ const Admin: React.FC = () => {
   };
 
   // --- Drag and Drop Handlers ---
-
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedImageIndex(index);
     e.dataTransfer.effectAllowed = "move";
@@ -242,7 +289,6 @@ const Admin: React.FC = () => {
   };
 
   // --- Tag Handlers ---
-
   const toggleModalTag = (tag: string, category: 'industry' | 'type') => {
     setCurrentProject(prev => {
       const currentTags = category === 'industry' ? (prev.industry_tags || []) : (prev.type_tags || []);
@@ -352,6 +398,12 @@ const Admin: React.FC = () => {
             <Tags size={16} /> Tags
           </button>
           <button 
+             onClick={() => setActiveTab('popups')}
+             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-colors ${activeTab === 'popups' ? 'bg-primary text-background' : 'bg-surface text-secondary hover:text-primary'}`}
+          >
+            <MessageSquare size={16} /> Popups
+          </button>
+          <button 
              onClick={() => setActiveTab('inquiries')}
              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-colors ${activeTab === 'inquiries' ? 'bg-primary text-background' : 'bg-surface text-secondary hover:text-primary'}`}
           >
@@ -359,6 +411,50 @@ const Admin: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Tab Content: Popups */}
+      {activeTab === 'popups' && (
+        <div className="animate-fade-in">
+          <div className="flex justify-end mb-4">
+            <button 
+              onClick={handleAddPopupClick} 
+              className="flex items-center gap-2 text-xs font-bold uppercase bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <Plus size={16} /> 새 팝업 추가
+            </button>
+          </div>
+          <div className="grid gap-4">
+            {popups.length === 0 ? (
+                <div className="text-center py-20 bg-surface rounded-xl border border-primary/5 text-secondary">
+                  등록된 팝업이 없습니다.
+                </div>
+            ) : (
+                popups.map(popup => (
+                <div key={popup.id} className={`bg-surface p-4 rounded-xl border flex flex-col md:flex-row items-center gap-4 ${popup.is_active ? 'border-green-500/50' : 'border-primary/5'}`}>
+                    <div className="relative">
+                      <img src={popup.image_url || 'https://via.placeholder.com/150'} alt={popup.title} className="w-full md:w-32 h-20 object-cover rounded-lg bg-neutral-900" />
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="font-bold text-lg text-primary">{popup.title}</h3>
+                      <p className="text-xs text-secondary truncate max-w-xs">{popup.content}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => togglePopupActive(popup)} className={`px-3 py-1 rounded-full text-xs font-bold ${popup.is_active ? 'bg-green-500 text-white' : 'bg-primary/10 text-primary'}`}>
+                        {popup.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                      <button onClick={() => handleEditPopupClick(popup)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary">
+                        <Edit2 size={16}/>
+                      </button>
+                      <button onClick={() => handleDeleteClick(popup.id!, 'popup')} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500">
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
+                </div>
+                ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tab Content: Works */}
       {activeTab === 'works' && (
@@ -406,7 +502,7 @@ const Admin: React.FC = () => {
                       <button onClick={() => handleEditClick(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title="수정">
                         <Edit2 size={16}/>
                       </button>
-                      <button onClick={() => handleDeleteClick(project.id)} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
+                      <button onClick={() => handleDeleteClick(project.id!, 'project')} className="p-2 hover:bg-red-500/10 rounded-full text-secondary hover:text-red-500 transition-colors" title="삭제">
                         <Trash2 size={16}/>
                       </button>
                     </div>
@@ -550,12 +646,53 @@ const Admin: React.FC = () => {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Popup Add/Edit Modal */}
+      {isPopupModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-surface w-full max-w-2xl max-h-[95vh] overflow-y-auto rounded-2xl border border-primary/10 p-6" data-lenis-prevent>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-primary">{modalMode === 'add' ? '새 팝업' : '팝업 수정'}</h2>
+              <button onClick={() => setIsPopupModalOpen(false)} className="text-secondary"><X size={20} /></button>
+            </div>
+            <form onSubmit={handlePopupModalSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-secondary uppercase">Title</label>
+                <input required className="w-full bg-background border p-3 rounded-lg text-primary" value={currentPopup.title || ''} onChange={e => setCurrentPopup({...currentPopup, title: e.target.value})} placeholder="팝업 제목 (내부 관리용 또는 상단 표시용)" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-secondary uppercase">Content</label>
+                <textarea className="w-full bg-background border p-3 rounded-lg text-primary" rows={3} value={currentPopup.content || ''} onChange={e => setCurrentPopup({...currentPopup, content: e.target.value})} placeholder="팝업 설명 텍스트" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-secondary uppercase">Link URL (Optional)</label>
+                <input className="w-full bg-background border p-3 rounded-lg text-primary" value={currentPopup.link_url || ''} onChange={e => setCurrentPopup({...currentPopup, link_url: e.target.value})} placeholder="https://..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-secondary uppercase">Image</label>
+                <div className="flex items-center gap-4">
+                  {currentPopup.image_url && <img src={currentPopup.image_url} alt="Popup" className="w-20 h-20 object-cover rounded border" />}
+                  <input type="file" accept="image/*" onChange={handlePopupImageUpload} disabled={isUploading} className="text-sm" />
+                  {isUploading && <Loader2 size={16} className="animate-spin text-primary" />}
+                </div>
+              </div>
+              <label className="flex items-center gap-3 cursor-pointer border-t pt-4 border-primary/5">
+                <input type="checkbox" className="w-5 h-5 accent-primary" checked={currentPopup.is_active || false} onChange={e => setCurrentPopup({...currentPopup, is_active: e.target.checked})} />
+                <span className="text-sm font-bold text-primary">메인 화면에 활성화 (체크 시 다른 팝업은 비활성화됨)</span>
+              </label>
+              <div className="flex justify-end pt-4">
+                <button type="submit" className="px-6 py-3 bg-primary text-background rounded-lg font-bold">저장</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Project Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <div 
             className="bg-surface w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl border border-primary/10 shadow-2xl flex flex-col animate-slide-up"
-            data-lenis-prevent // 여기 추가했습니다!
+            data-lenis-prevent
           >
             <div className="flex justify-between items-center p-6 border-b border-primary/5 bg-surface sticky top-0 z-10">
               <h2 className="text-xl font-display font-bold text-primary">{modalMode === 'add' ? '새 작업 추가' : '작업 수정'}</h2>
@@ -752,17 +889,21 @@ const Admin: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Alert */}
+      {/* Delete Confirmation Alert (공용) */}
       {deleteAlert.isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-surface w-full max-w-sm p-6 rounded-xl border border-red-500/20 shadow-2xl text-center">
             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
               <AlertTriangle size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary mb-2">작업 삭제?</h3>
-            <p className="text-secondary text-sm mb-6">이 작업은 되돌릴 수 없습니다. 프로젝트가 영구적으로 삭제됩니다.</p>
+            <h3 className="text-xl font-bold text-primary mb-2">삭제 확인</h3>
+            <p className="text-secondary text-sm mb-6">
+              {deleteAlert.type === 'project' 
+                ? '이 작업은 되돌릴 수 없습니다. 프로젝트가 영구적으로 삭제됩니다.'
+                : '선택하신 팝업을 영구적으로 삭제합니다.'}
+            </p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => setDeleteAlert({isOpen: false, projectId: null})} className="flex-1 px-4 py-3 rounded-lg text-sm font-bold uppercase border border-primary/10 hover:bg-primary/5 text-primary">취소</button>
+              <button onClick={() => setDeleteAlert({isOpen: false, id: null, type: 'project'})} className="flex-1 px-4 py-3 rounded-lg text-sm font-bold uppercase border border-primary/10 hover:bg-primary/5 text-primary">취소</button>
               <button onClick={confirmDelete} className="flex-1 px-4 py-3 rounded-lg text-sm font-bold uppercase bg-red-500 text-white hover:bg-red-600">삭제</button>
             </div>
           </div>
