@@ -84,7 +84,7 @@ const About: React.FC = () => {
           const items = sectionRef.current.querySelectorAll('.reveal-item');
           
           // 동적 간격 조절
-          const interval = items.length > 4 ? 0.15 : 0.15;
+          const interval = items.length > 4 ? 0.15 : 0.1;
 
           items.forEach((item, index) => {
             const triggerPoint = 0.15 + (index * interval); 
