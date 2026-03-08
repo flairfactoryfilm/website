@@ -202,7 +202,7 @@ const Layout: React.FC = () => {
                   <img 
                     src={popupData.image_url} 
                     alt="Popup Banner" 
-                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" 
+                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[480px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" 
                   />
                 </a>
               ) : (
@@ -210,7 +210,7 @@ const Layout: React.FC = () => {
                   <img 
                     src={popupData.image_url} 
                     alt="Popup Banner" 
-                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[600px] object-contain" 
+                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[480px] object-contain" 
                   />
                 </div>
               )
