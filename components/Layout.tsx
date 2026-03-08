@@ -185,31 +185,37 @@ const Layout: React.FC = () => {
             className="bg-surface w-full max-w-md rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
             data-lenis-prevent 
           >
+            {/* 닫기 버튼 */}
             <button onClick={closePopup} className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors">
               <X size={18} />
             </button>
 
-            {/* 이미지가 있을 때만 노출, 링크가 있으면 a태그로 감싸기 */}
+            {/* 이미지 영역 (제목/본문 텍스트 완전히 삭제) */}
             {popupData.image_url && (
               popupData.link_url ? (
-                <a href={popupData.link_url} target="_blank" rel="noreferrer" className="relative w-full aspect-[4/3] block group">
-                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                <a 
+                  // http나 /로 시작하지 않으면 자동으로 https://를 붙여줌
+                  href={popupData.link_url.startsWith('http') || popupData.link_url.startsWith('/') ? popupData.link_url : `https://${popupData.link_url}`} 
+                  // /로 시작하는 내부 링크면 현재 창, 아니면 새 창(_blank)으로 열기
+                  target={popupData.link_url.startsWith('/') ? "_self" : "_blank"} 
+                  rel="noreferrer" 
+                  className="relative w-full block group"
+                >
+                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-auto object-cover transition-transform group-hover:scale-[1.02]" />
                 </a>
               ) : (
-                <div className="relative w-full aspect-[4/3]">
-                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-full object-cover" />
+                <div className="relative w-full">
+                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-auto object-cover" />
                 </div>
               )
             )}
             
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-primary mb-2">{popupData.title}</h3>
-              {popupData.content && <p className="text-secondary text-sm leading-relaxed mb-6 whitespace-pre-wrap">{popupData.content}</p>}
-
-              <div className="flex items-center justify-between pt-4 border-t border-primary/5">
+            {/* 하단 컨트롤 바 (오늘 하루 보지 않기 + 닫기) */}
+            <div className="p-4 bg-surface border-t border-primary/5">
+              <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 accent-primary rounded cursor-pointer" checked={hideFor24Hours} onChange={(e) => setHideFor24Hours(e.target.checked)} />
-                  <span className="text-xs text-secondary group-hover:text-primary transition-colors">24시간 동안 보지 않기</span>
+                  <span className="text-xs font-medium text-secondary group-hover:text-primary transition-colors">24시간 동안 보지 않기</span>
                 </label>
                 <button onClick={closePopup} className="text-sm font-bold text-primary hover:opacity-70 transition-opacity">닫기</button>
               </div>
