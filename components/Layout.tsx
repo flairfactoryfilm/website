@@ -190,22 +190,31 @@ const Layout: React.FC = () => {
               <X size={18} />
             </button>
 
-            {/* 이미지 영역 (제목/본문 텍스트 완전히 삭제) */}
+            {/* 이미지 영역 (비율 및 최대 크기 제한 적용) */}
             {popupData.image_url && (
               popupData.link_url ? (
                 <a 
-                  // http나 /로 시작하지 않으면 자동으로 https://를 붙여줌
                   href={popupData.link_url.startsWith('http') || popupData.link_url.startsWith('/') ? popupData.link_url : `https://${popupData.link_url}`} 
-                  // /로 시작하는 내부 링크면 현재 창, 아니면 새 창(_blank)으로 열기
                   target={popupData.link_url.startsWith('/') ? "_self" : "_blank"} 
                   rel="noreferrer" 
-                  className="relative w-full block group"
+                  // [수정됨] 배경색을 살짝 깔아주고 오버플로우를 숨깁니다.
+                  className="relative w-full flex justify-center bg-black/5 dark:bg-white/5 overflow-hidden group"
                 >
-                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-auto object-cover transition-transform group-hover:scale-[1.02]" />
+                  <img 
+                    src={popupData.image_url} 
+                    alt="Popup Banner" 
+                    // [수정됨] 최대 높이를 화면의 60%(모바일) 또는 500px(데스크탑)로 제한하고, 잘리지 않게 object-contain 적용
+                    className="w-full max-h-[60vh] md:max-h-[500px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" 
+                  />
                 </a>
               ) : (
-                <div className="relative w-full">
-                  <img src={popupData.image_url} alt="Popup Banner" className="w-full h-auto object-cover" />
+                <div className="relative w-full flex justify-center bg-black/5 dark:bg-white/5 overflow-hidden">
+                  <img 
+                    src={popupData.image_url} 
+                    alt="Popup Banner" 
+                    // [수정됨] 
+                    className="w-full max-h-[60vh] md:max-h-[500px] object-contain" 
+                  />
                 </div>
               )
             )}
