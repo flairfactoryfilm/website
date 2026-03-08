@@ -27,3 +27,13 @@ export interface FilterState {
   industry: string[];
   type: string[];
 }
+
+export interface Popup {
+  id?: string;
+  title: string;
+  content?: string;
+  image_url?: string;
+  link_url?: string;
+  is_active: boolean;
+  created_at?: string;
+}
