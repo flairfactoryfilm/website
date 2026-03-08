@@ -18,7 +18,7 @@ const Layout: React.FC = () => {
     if (typeof window !== 'undefined' && localStorage.getItem('theme')) {
       return localStorage.getItem('theme') as 'dark' | 'light';
     }
-    return 'dark';
+    return 'light';
   });
 
   // --- [NEW] Popup State ---
