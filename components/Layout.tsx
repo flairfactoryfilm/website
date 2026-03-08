@@ -182,38 +182,35 @@ const Layout: React.FC = () => {
       {isPopupOpen && popupData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div 
-            className="bg-surface w-full max-w-md rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
-            data-lenis-prevent 
-          >
+  className="bg-surface w-fit max-w-[90vw] md:max-w-2xl rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
+  data-lenis-prevent 
+>
             {/* 닫기 버튼 */}
             <button onClick={closePopup} className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors">
               <X size={18} />
             </button>
 
-            {/* 이미지 영역 (비율 및 최대 크기 제한 적용) */}
+            {/* 이미지 영역 (여백 없이 이미지 크기에 맞춰 팝업창이 조절됨) */}
             {popupData.image_url && (
               popupData.link_url ? (
                 <a 
                   href={popupData.link_url.startsWith('http') || popupData.link_url.startsWith('/') ? popupData.link_url : `https://${popupData.link_url}`} 
                   target={popupData.link_url.startsWith('/') ? "_self" : "_blank"} 
                   rel="noreferrer" 
-                  // [수정됨] 배경색을 살짝 깔아주고 오버플로우를 숨깁니다.
-                  className="relative w-full flex justify-center bg-black/5 dark:bg-white/5 overflow-hidden group"
+                  className="relative block group overflow-hidden"
                 >
                   <img 
                     src={popupData.image_url} 
                     alt="Popup Banner" 
-                    // [수정됨] 최대 높이를 화면의 60%(모바일) 또는 500px(데스크탑)로 제한하고, 잘리지 않게 object-contain 적용
-                    className="w-full max-h-[60vh] md:max-h-[500px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" 
+                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[600px] object-contain transition-transform duration-500 group-hover:scale-[1.02]" 
                   />
                 </a>
               ) : (
-                <div className="relative w-full flex justify-center bg-black/5 dark:bg-white/5 overflow-hidden">
+                <div className="relative block overflow-hidden">
                   <img 
                     src={popupData.image_url} 
                     alt="Popup Banner" 
-                    // [수정됨] 
-                    className="w-full max-h-[60vh] md:max-h-[500px] object-contain" 
+                    className="w-auto h-auto max-w-full max-h-[60vh] md:max-h-[600px] object-contain" 
                   />
                 </div>
               )
