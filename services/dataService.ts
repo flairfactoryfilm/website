@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Project, ContactForm } from '../types';
+import { Project, ContactForm, Popup } from '../types'; // Popup 임포트 통합
 
 // ==========================================
 // 1. Projects (포트폴리오 작업물 관리)
@@ -109,18 +109,21 @@ export const getAllTags = async () => {
     
   if (error) {
     console.error('Error fetching tags:', error);
-    return { industry: [], type: [] };
+    // [수정] 3가지 카테고리 배열로 반환
+    return { industry: [], video_type: [], design_type: [] };
   }
 
-  // DB의 플랫한 데이터를 UI가 원하는 구조({ industry: [], type: [] })로 변환
+  // [수정] DB의 데이터를 UI가 원하는 3가지 구조로 변환
   const industry = data?.filter((t: any) => t.category === 'industry').map((t: any) => t.name) || [];
-  const type = data?.filter((t: any) => t.category === 'type').map((t: any) => t.name) || [];
+  const video_type = data?.filter((t: any) => t.category === 'video_type').map((t: any) => t.name) || [];
+  const design_type = data?.filter((t: any) => t.category === 'design_type').map((t: any) => t.name) || [];
 
-  return { industry, type };
+  return { industry, video_type, design_type };
 };
 
 // 새 태그 추가
-export const addTag = async (name: string, category: 'industry' | 'type') => {
+// [수정] category 타입을 3가지로 확장
+export const addTag = async (name: string, category: 'industry' | 'video_type' | 'design_type') => {
     const { error } = await supabase
         .from('tags')
         .insert([{ name, category }]);
@@ -174,7 +177,10 @@ export const uploadImage = async (file: File): Promise<string> => {
   return data.publicUrl;
 };
 
-import { Popup } from '../types';
+
+// ==========================================
+// 5. Popups (팝업 관리)
+// ==========================================
 
 // 모든 팝업 가져오기 (관리자용)
 export const getPopups = async () => {
