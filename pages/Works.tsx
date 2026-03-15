@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom'; // [NEW] useLocation 임포트
+import { useLocation } from 'react-router-dom'; 
 import { getProjects, getAllTags } from '../services/dataService'; 
 import { Project } from '../types';
 import WorkCard from '../components/WorkCard';
@@ -9,13 +9,18 @@ const Works: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // [NEW] 현재 URL 파악
+  // 현재 URL 파악
   const { pathname } = useLocation();
   const currentCategory = pathname.includes('/design') ? 'design' : 'video';
 
-  // Tag States
-  const [availableIndustries, setAvailableIndustries] = useState<string[]>([]);
-  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+  // [수정] 3가지 카테고리의 태그를 모두 담을 상태
+  const [allTags, setAllTags] = useState<{industry: string[], video_type: string[], design_type: string[]}>({ 
+    industry: [], video_type: [], design_type: [] 
+  });
+
+  // [NEW] 주소에 따라 화면에 보여줄 태그 리스트를 실시간으로 결정
+  const availableIndustries = allTags.industry || [];
+  const availableTypes = currentCategory === 'design' ? (allTags.design_type || []) : (allTags.video_type || []);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,9 +48,8 @@ const Works: React.FC = () => {
         // 1. 프로젝트 설정 (공개된 것만)
         setProjects(projectsData.filter(p => p.is_visible));
         
-        // 2. 태그 목록 설정
-        setAvailableIndustries(tagsData.industry);
-        setAvailableTypes(tagsData.type);
+        // 2. 태그 목록 통째로 저장
+        setAllTags(tagsData as any);
 
       } catch (error) {
         console.error("Failed to load data", error);
@@ -59,7 +63,7 @@ const Works: React.FC = () => {
   // Filtering Logic
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
-      // [NEW] 0. Category Filter (Video vs Design)
+      // 0. Category Filter (Video vs Design)
       const matchesCategory = (p.category || 'video') === currentCategory;
 
       // 1. Search Text (Title or Client)
@@ -114,7 +118,6 @@ const Works: React.FC = () => {
       {/* Header Section */}
       <div className="mb-8 pt-6">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-8">
-          {/* [NEW] 현재 카테고리에 맞춰 타이틀 동적 변경 */}
           <h2 className="text-4xl md:text-6xl font-display font-bold text-primary uppercase">
             {currentCategory === 'video' ? 'Video Works' : 'Design Works'}
           </h2>
@@ -199,7 +202,10 @@ const Works: React.FC = () => {
 
             {/* Type Group */}
             <div className="flex-1">
-              <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Work Type</h4>
+              {/* [NEW] 현재 카테고리에 맞춰 필터 제목 변경 */}
+              <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
+                {currentCategory === 'video' ? 'Video Type' : 'Design Type'}
+              </h4>
               <div className="flex flex-wrap gap-2 items-center">
                  <button
                     onClick={() => setSelectedTypes([])}
@@ -248,7 +254,6 @@ const Works: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-1 md:gap-4 lg:gap-6 mt-12">
         {filteredProjects.map((project) => (
           <div key={project.id} className="animate-slide-up">
-            {/* [NEW] WorkCard에 baseUrl prop 전달. 기존 WorkCard 컴포넌트 내부에서 이걸 받아 쓰도록 수정해야 함 */}
             <WorkCard project={project} baseUrl={`/${currentCategory}`} />
           </div>
         ))}
