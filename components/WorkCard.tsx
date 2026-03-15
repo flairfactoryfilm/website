@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom';
 
 interface WorkCardProps {
   project: Project;
+  baseUrl?: string; // [NEW] 상위 컴포넌트에서 넘겨줄 수 있는 동적 URL 경로
 }
 
-const WorkCard: React.FC<WorkCardProps> = ({ project }) => {
+// [NEW] baseUrl의 기본값을 '/video'로 설정하여 혹시 값이 안 넘어와도 에러가 나지 않게 방어
+const WorkCard: React.FC<WorkCardProps> = ({ project, baseUrl = '/video' }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // 1. 썸네일 소스 결정 (thumbnail_url이 없으면 images 배열의 첫 번째 사진 사용)
@@ -56,7 +58,8 @@ const WorkCard: React.FC<WorkCardProps> = ({ project }) => {
   };
 
   return (
-    <Link to={`/works/${project.id}`} className="block group">
+    // [NEW] 기존 `/works/${project.id}` 였던 부분을 넘겨받은 `${baseUrl}/${project.id}` 로 변경
+    <Link to={`${baseUrl}/${project.id}`} className="block group">
       {/* Media Container */}
       <div 
         className="relative w-full aspect-video bg-neutral-900 overflow-hidden cursor-pointer mb-5"
