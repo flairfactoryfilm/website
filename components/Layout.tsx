@@ -77,9 +77,11 @@ const Layout: React.FC = () => {
     setIsPopupOpen(false);
   };
 
+  // [NEW] 메뉴 구조를 About - Video - Design - Contact로 변경
   const navLinks = [
     { name: 'About', path: '/about' },
-    { name: 'Works', path: '/works' },
+    { name: 'Video', path: '/video' },
+    { name: 'Design', path: '/design' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -182,9 +184,9 @@ const Layout: React.FC = () => {
       {isPopupOpen && popupData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div 
-  className="bg-surface w-fit max-w-[90vw] md:max-w-2xl rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
-  data-lenis-prevent 
->
+            className="bg-surface w-fit max-w-[90vw] md:max-w-2xl rounded-2xl border border-primary/10 shadow-2xl relative animate-slide-up flex flex-col overflow-hidden"
+            data-lenis-prevent 
+          >
             {/* 닫기 버튼 */}
             <button onClick={closePopup} className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors">
               <X size={18} />
