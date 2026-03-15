@@ -37,8 +37,13 @@ const App: React.FC = () => {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
-          <Route path="works" element={<Works />} />
-          <Route path="works/:id" element={<WorksDetail />} />
+          
+          {/* [NEW] works 경로를 삭제하고 video와 design으로 분리하여 연결 */}
+          <Route path="video" element={<Works />} />
+          <Route path="video/:id" element={<WorksDetail />} />
+          <Route path="design" element={<Works />} />
+          <Route path="design/:id" element={<WorksDetail />} />
+          
           <Route path="contact" element={<Contact />} />
           <Route path="admin" element={<Admin />} />
         </Route>
