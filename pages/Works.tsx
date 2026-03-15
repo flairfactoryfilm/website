@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getProjects, getAllTags } from '../services/dataService'; // getAllTags 추가 Import
+import { useLocation } from 'react-router-dom'; // [NEW] useLocation 임포트
+import { getProjects, getAllTags } from '../services/dataService'; 
 import { Project } from '../types';
 import WorkCard from '../components/WorkCard';
 import { Search, X, Filter } from 'lucide-react';
@@ -8,7 +9,11 @@ const Works: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Tag States (DB에서 가져올 전체 태그 목록을 담을 상태)
+  // [NEW] 현재 URL 파악
+  const { pathname } = useLocation();
+  const currentCategory = pathname.includes('/design') ? 'design' : 'video';
+
+  // Tag States
   const [availableIndustries, setAvailableIndustries] = useState<string[]>([]);
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
 
@@ -18,11 +23,18 @@ const Works: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
+  // 메뉴(카테고리) 이동 시 검색어/필터 초기화
+  useEffect(() => {
+    setSearchQuery('');
+    setSelectedIndustries([]);
+    setSelectedTypes([]);
+    setIsMobileFiltersOpen(false);
+  }, [pathname]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 프로젝트 목록과 태그 목록을 동시에 가져옵니다.
         const [projectsData, tagsData] = await Promise.all([
           getProjects(),
           getAllTags()
@@ -31,8 +43,7 @@ const Works: React.FC = () => {
         // 1. 프로젝트 설정 (공개된 것만)
         setProjects(projectsData.filter(p => p.is_visible));
         
-        // 2. 태그 목록 설정 (DB에 있는 모든 태그)
-        // 작업물이 없어도 이 태그들은 화면에 표시됩니다.
+        // 2. 태그 목록 설정
         setAvailableIndustries(tagsData.industry);
         setAvailableTypes(tagsData.type);
 
@@ -45,32 +56,33 @@ const Works: React.FC = () => {
     fetchData();
   }, []);
 
-  // 기존 useMemo로 태그를 추출하던 코드는 삭제됨 (DB 데이터인 availableIndustries, availableTypes 사용)
-
-  // Filtering Logic (기존과 동일)
+  // Filtering Logic
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
+      // [NEW] 0. Category Filter (Video vs Design)
+      const matchesCategory = (p.category || 'video') === currentCategory;
+
       // 1. Search Text (Title or Client)
       const matchesSearch =
         searchQuery === '' ||
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.client.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // 2. Industry Filter (OR logic within group)
+      // 2. Industry Filter
       const matchesIndustry =
         selectedIndustries.length === 0 ||
         p.industry_tags.some(tag => selectedIndustries.includes(tag));
 
-      // 3. Type Filter (OR logic within group)
+      // 3. Type Filter
       const matchesType =
         selectedTypes.length === 0 ||
         p.type_tags.some(tag => selectedTypes.includes(tag));
 
-      return matchesSearch && matchesIndustry && matchesType;
+      return matchesCategory && matchesSearch && matchesIndustry && matchesType;
     });
-  }, [projects, searchQuery, selectedIndustries, selectedTypes]);
+  }, [projects, currentCategory, searchQuery, selectedIndustries, selectedTypes]);
 
-  // Handlers (기존과 동일)
+  // Handlers
   const toggleIndustry = (tag: string) => {
     setSelectedIndustries(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -98,11 +110,14 @@ const Works: React.FC = () => {
   }
 
   return (
-    <div className="px-4 md:px-6 min-h-screen pb-20">
+    <div className="px-4 md:px-6 min-h-screen pb-20 animate-fade-in">
       {/* Header Section */}
       <div className="mb-8 pt-6">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-8">
-          <h2 className="text-4xl md:text-6xl font-display font-bold text-primary">Selected Works</h2>
+          {/* [NEW] 현재 카테고리에 맞춰 타이틀 동적 변경 */}
+          <h2 className="text-4xl md:text-6xl font-display font-bold text-primary uppercase">
+            {currentCategory === 'video' ? 'Video Works' : 'Design Works'}
+          </h2>
           <span className="text-secondary text-sm uppercase tracking-widest hidden md:block">
             {filteredProjects.length} Projects Found
           </span>
@@ -143,7 +158,6 @@ const Works: React.FC = () => {
             <div className="flex-1">
               <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Industry</h4>
               <div className="flex flex-wrap gap-2 items-center">
-                 {/* All Tag */}
                  <button
                     onClick={() => setSelectedIndustries([])}
                     className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-full transition-all duration-200 ${
@@ -155,7 +169,6 @@ const Works: React.FC = () => {
                     All
                   </button>
                 
-                {/* DB에서 가져온 태그 목록(availableIndustries)을 사용 */}
                 {availableIndustries.map(tag => {
                   const isSelected = selectedIndustries.includes(tag);
                   return (
@@ -173,7 +186,6 @@ const Works: React.FC = () => {
                   );
                 })}
 
-                {/* Conditional Reset Button */}
                 {selectedIndustries.length > 0 && (
                    <button 
                      onClick={() => setSelectedIndustries([])}
@@ -189,7 +201,6 @@ const Works: React.FC = () => {
             <div className="flex-1">
               <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Work Type</h4>
               <div className="flex flex-wrap gap-2 items-center">
-                {/* All Tag */}
                  <button
                     onClick={() => setSelectedTypes([])}
                     className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-full transition-all duration-200 ${
@@ -201,7 +212,6 @@ const Works: React.FC = () => {
                     All
                   </button>
 
-                {/* DB에서 가져온 태그 목록(availableTypes)을 사용 */}
                 {availableTypes.map(tag => {
                   const isSelected = selectedTypes.includes(tag);
                   return (
@@ -219,7 +229,6 @@ const Works: React.FC = () => {
                   );
                 })}
 
-                {/* Conditional Reset Button */}
                 {selectedTypes.length > 0 && (
                    <button 
                      onClick={() => setSelectedTypes([])}
@@ -239,7 +248,8 @@ const Works: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-1 md:gap-4 lg:gap-6 mt-12">
         {filteredProjects.map((project) => (
           <div key={project.id} className="animate-slide-up">
-            <WorkCard project={project} />
+            {/* [NEW] WorkCard에 baseUrl prop 전달. 기존 WorkCard 컴포넌트 내부에서 이걸 받아 쓰도록 수정해야 함 */}
+            <WorkCard project={project} baseUrl={`/${currentCategory}`} />
           </div>
         ))}
       </div>
@@ -247,7 +257,7 @@ const Works: React.FC = () => {
       {filteredProjects.length === 0 && (
         <div className="py-32 flex flex-col items-center justify-center text-center text-primary/30 space-y-4">
           <div className="text-4xl font-display font-bold opacity-50">검색 결과 없음</div>
-          <p className="tracking-wide text-sm">검색어 또는 필터를 변경해보세요.</p>
+          <p className="tracking-wide text-sm">해당 카테고리 또는 검색어에 맞는 결과가 없습니다.</p>
           <button onClick={clearFilters} className="mt-4 px-6 py-2 border border-primary/20 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-background transition-colors">
             초기화
           </button>
