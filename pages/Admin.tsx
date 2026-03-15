@@ -119,6 +119,7 @@ const Admin: React.FC = () => {
 
   const handleAddClick = () => {
     setCurrentProject({
+      category: 'video', // [NEW] 새 작업 추가 시 기본값을 비디오로 설정
       title: '', client: '', video_url: '', thumbnail_url: '', 
       industry_tags: [], type_tags: [], is_featured: false, is_visible: true, description: '',
       images: []
@@ -485,17 +486,23 @@ const Admin: React.FC = () => {
                     </div>
                     
                     <div className="flex-1 text-center md:text-left">
-                      <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
-                      <p className="text-xs text-secondary uppercase tracking-wider">
+                      {/* [NEW] 비디오/디자인 구분을 위한 뱃지 추가 */}
+                      <div className="flex flex-col md:flex-row items-center md:items-center gap-2 mb-1 justify-center md:justify-start">
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${project.category === 'design' ? 'bg-purple-500/10 text-purple-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                          {project.category || 'video'}
+                        </span>
+                        <h3 className="font-display font-bold text-lg text-primary">{project.title}</h3>
+                      </div>
+                      <p className="text-xs text-secondary uppercase tracking-wider mt-1">
                           {project.work_date ? project.work_date.substring(0, 7) : 'Date N/A'} • {project.client}
                       </p>
                     </div>
                     
-                    <div className="flex gap-2 text-sm text-secondary">
+                    <div className="flex gap-2 text-sm text-secondary justify-center">
                       {project.is_featured && <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase">Featured</span>}
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-center">
                       <button onClick={() => toggleVisibility(project)} className="p-2 hover:bg-primary/10 rounded-full text-secondary hover:text-primary transition-colors" title={project.is_visible ? "숨기기" : "보이기"}>
                         {project.is_visible ? <Eye size={16}/> : <EyeOff size={16}/>}
                       </button>
@@ -668,40 +675,40 @@ const Admin: React.FC = () => {
                 <input className="w-full bg-background border p-3 rounded-lg text-primary" value={currentPopup.link_url || ''} onChange={e => setCurrentPopup({...currentPopup, link_url: e.target.value})} placeholder="https://..." />
               </div>
               <div className="space-y-4">
-  <label className="text-xs font-bold text-secondary uppercase">Image</label>
-  
-  {/* 예쁜 업로드 영역 (프로젝트 탭과 동일한 스타일) */}
-  <div className="relative border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
-     {isUploading && (
-         <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-xl">
-             <div className="flex flex-col items-center gap-2">
-                 <Loader2 className="animate-spin text-primary" size={24}/>
-                 <span className="text-xs font-bold text-primary">Uploading...</span>
-             </div>
-         </div>
-     )}
-    <input 
-      type="file" 
-      id="popup-image-upload" 
-      accept="image/*" 
-      className="hidden" 
-      onChange={handlePopupImageUpload}
-      disabled={isUploading}
-    />
-    <label htmlFor="popup-image-upload" className={`cursor-pointer flex flex-col items-center gap-2 ${isUploading ? 'opacity-50' : ''}`}>
-      <Upload size={32} className="text-primary/40" />
-      <span className="text-sm font-bold text-primary">클릭 또는 드래그하여 이미지 업로드</span>
-      <span className="text-xs text-secondary">JPG, PNG, WEBP 지원</span>
-    </label>
-  </div>
+                <label className="text-xs font-bold text-secondary uppercase">Image</label>
+                
+                {/* 예쁜 업로드 영역 */}
+                <div className="relative border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
+                   {isUploading && (
+                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-xl">
+                           <div className="flex flex-col items-center gap-2">
+                               <Loader2 className="animate-spin text-primary" size={24}/>
+                               <span className="text-xs font-bold text-primary">Uploading...</span>
+                           </div>
+                       </div>
+                   )}
+                  <input 
+                    type="file" 
+                    id="popup-image-upload" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handlePopupImageUpload}
+                    disabled={isUploading}
+                  />
+                  <label htmlFor="popup-image-upload" className={`cursor-pointer flex flex-col items-center gap-2 ${isUploading ? 'opacity-50' : ''}`}>
+                    <Upload size={32} className="text-primary/40" />
+                    <span className="text-sm font-bold text-primary">클릭 또는 드래그하여 이미지 업로드</span>
+                    <span className="text-xs text-secondary">JPG, PNG, WEBP 지원</span>
+                  </label>
+                </div>
 
-  {/* 업로드된 이미지 미리보기 */}
-  {currentPopup.image_url && (
-    <div className="relative w-full max-w-[200px] rounded-lg overflow-hidden border border-primary/10">
-      <img src={currentPopup.image_url} alt="Popup Preview" className="w-full h-auto object-cover" />
-    </div>
-  )}
-</div>
+                {/* 업로드된 이미지 미리보기 */}
+                {currentPopup.image_url && (
+                  <div className="relative w-full max-w-[200px] rounded-lg overflow-hidden border border-primary/10">
+                    <img src={currentPopup.image_url} alt="Popup Preview" className="w-full h-auto object-cover" />
+                  </div>
+                )}
+              </div>
               <label className="flex items-center gap-3 cursor-pointer border-t pt-4 border-primary/5">
                 <input type="checkbox" className="w-5 h-5 accent-primary" checked={currentPopup.is_active || false} onChange={e => setCurrentPopup({...currentPopup, is_active: e.target.checked})} />
                 <span className="text-sm font-bold text-primary">메인 화면에 활성화 (체크 시 다른 팝업은 비활성화됨)</span>
@@ -727,6 +734,36 @@ const Admin: React.FC = () => {
             </div>
             
             <form onSubmit={handleModalSubmit} className="p-6 space-y-8">
+              
+              {/* [NEW] 0. 카테고리 선택 (Video / Design) */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-secondary">Category</label>
+                <div className="flex gap-6 p-4 bg-background border border-primary/10 rounded-lg">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="category" 
+                      value="video" 
+                      className="accent-primary w-4 h-4"
+                      checked={currentProject.category === 'video' || !currentProject.category} 
+                      onChange={() => setCurrentProject({...currentProject, category: 'video'})} 
+                    /> 
+                    <span className="text-sm font-bold text-primary">Video (영상)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="category" 
+                      value="design" 
+                      className="accent-primary w-4 h-4"
+                      checked={currentProject.category === 'design'} 
+                      onChange={() => setCurrentProject({...currentProject, category: 'design'})} 
+                    /> 
+                    <span className="text-sm font-bold text-primary">Design (디자인/인쇄물)</span>
+                  </label>
+                </div>
+              </div>
+
               {/* 1. Basic Info & Work Date */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -765,7 +802,7 @@ const Admin: React.FC = () => {
               <div className="space-y-2">
                  <label className="text-xs uppercase font-bold text-secondary">Vimeo Video ID (Numbers Only)</label>
                  <input className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.vimeo_id || ''} onChange={e => setCurrentProject({...currentProject, vimeo_id: e.target.value})} placeholder="예: 375468729" />
-                 <p className="text-[10px] text-secondary">Vimeo 주소 뒷부분 숫자만 입력하세요.</p>
+                 <p className="text-[10px] text-secondary">Vimeo 주소 뒷부분 숫자만 입력하세요. (영상일 경우에만 작성)</p>
               </div>
 
               {/* 4. Images */}
