@@ -1,5 +1,6 @@
 export interface Project {
   id: string;
+  category?: 'video' | 'design'; // [NEW] 비디오/디자인 구분용 카테고리 추가
   title: string;
   client: string;
   work_date: string;        // 실제 작업 시기 (YYYY-MM-DD) - 새로 추가됨
