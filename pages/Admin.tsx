@@ -11,12 +11,12 @@ import {
   addTag,
   deleteTag,
   uploadImage,
-  getPopups,      // [NEW]
-  createPopup,    // [NEW]
-  updatePopup,    // [NEW]
-  deletePopup     // [NEW]
+  getPopups,
+  createPopup,
+  updatePopup,
+  deletePopup
 } from '../services/dataService';
-import { Project, Popup } from '../types'; // [NEW] Popup 타입 추가
+import { Project, Popup } from '../types';
 import { 
   Shield, Plus, Edit2, Trash2, Mail, LayoutGrid, Tags, 
   Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar, MessageSquare
@@ -30,17 +30,17 @@ const Admin: React.FC = () => {
   const [password, setPassword] = useState('');
 
   // --- UI State ---
-  const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries' | 'popups'>('works'); // [NEW] popups 추가
+  const [activeTab, setActiveTab] = useState<'works' | 'tags' | 'inquiries' | 'popups'>('works');
    
   // --- Data State ---
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [availableTags, setAvailableTags] = useState<{industry: string[], type: string[]}>({ industry: [], type: [] });
-  const [popups, setPopups] = useState<Popup[]>([]); // [NEW] 팝업 데이터
+  const [popups, setPopups] = useState<Popup[]>([]);
    
   // --- Modal & Form State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPopupModalOpen, setIsPopupModalOpen] = useState(false); // [NEW] 팝업 모달
+  const [isPopupModalOpen, setIsPopupModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isUploading, setIsUploading] = useState(false);
    
@@ -50,7 +50,7 @@ const Admin: React.FC = () => {
     images: [] 
   });
 
-  const [currentPopup, setCurrentPopup] = useState<Partial<Popup>>({ is_active: false }); // [NEW] 팝업 상태
+  const [currentPopup, setCurrentPopup] = useState<Partial<Popup>>({ is_active: false });
    
   // Work Date String for Input (YYYY-MM)
   const [workDateInput, setWorkDateInput] = useState('');
@@ -63,7 +63,6 @@ const Admin: React.FC = () => {
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
 
   // --- Alert State ---
-  // [수정] projectId -> id로 범용성 있게 변경, type 필드 추가
   const [deleteAlert, setDeleteAlert] = useState<{ isOpen: boolean, id: string | null, type: 'project' | 'popup' }>({ isOpen: false, id: null, type: 'project' });
 
   // --- Initialization ---
@@ -71,7 +70,7 @@ const Admin: React.FC = () => {
     getProjects().then(setProjects);
     getContacts().then(setContacts);
     getAllTags().then(setAvailableTags);
-    getPopups().then(setPopups); // [NEW] 팝업 갱신
+    getPopups().then(setPopups);
   };
 
   useEffect(() => {
@@ -111,7 +110,6 @@ const Admin: React.FC = () => {
   // --- Project Handlers ---
   const handleEditClick = (project: Project) => {
     setCurrentProject({ ...project, images: project.images || [] });
-    // YYYY-MM-DD -> YYYY-MM 변환
     setWorkDateInput(project.work_date ? project.work_date.substring(0, 7) : '');
     setModalMode('edit');
     setIsModalOpen(true);
@@ -119,12 +117,11 @@ const Admin: React.FC = () => {
 
   const handleAddClick = () => {
     setCurrentProject({
-      category: 'video', // [NEW] 새 작업 추가 시 기본값을 비디오로 설정
+      category: 'video',
       title: '', client: '', video_url: '', thumbnail_url: '', 
       industry_tags: [], type_tags: [], is_featured: false, is_visible: true, description: '',
       images: []
     });
-    // 오늘 날짜 기준 YYYY-MM 설정
     setWorkDateInput(new Date().toISOString().substring(0, 7));
     setModalMode('add');
     setIsModalOpen(true);
@@ -180,7 +177,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  // --- [NEW] Popup Handlers ---
+  // --- Popup Handlers ---
   const handleAddPopupClick = () => {
     setCurrentPopup({ title: '', content: '', image_url: '', link_url: '', is_active: false });
     setModalMode('add');
@@ -486,7 +483,6 @@ const Admin: React.FC = () => {
                     </div>
                     
                     <div className="flex-1 text-center md:text-left">
-                      {/* [NEW] 비디오/디자인 구분을 위한 뱃지 추가 */}
                       <div className="flex flex-col md:flex-row items-center md:items-center gap-2 mb-1 justify-center md:justify-start">
                         <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${project.category === 'design' ? 'bg-purple-500/10 text-purple-500' : 'bg-blue-500/10 text-blue-500'}`}>
                           {project.category || 'video'}
@@ -677,7 +673,6 @@ const Admin: React.FC = () => {
               <div className="space-y-4">
                 <label className="text-xs font-bold text-secondary uppercase">Image</label>
                 
-                {/* 예쁜 업로드 영역 */}
                 <div className="relative border-2 border-dashed border-primary/10 rounded-xl p-8 text-center hover:border-primary/30 transition-colors bg-background/50">
                    {isUploading && (
                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-xl">
@@ -702,7 +697,6 @@ const Admin: React.FC = () => {
                   </label>
                 </div>
 
-                {/* 업로드된 이미지 미리보기 */}
                 {currentPopup.image_url && (
                   <div className="relative w-full max-w-[200px] rounded-lg overflow-hidden border border-primary/10">
                     <img src={currentPopup.image_url} alt="Popup Preview" className="w-full h-auto object-cover" />
@@ -735,32 +729,32 @@ const Admin: React.FC = () => {
             
             <form onSubmit={handleModalSubmit} className="p-6 space-y-8">
               
-              {/* [NEW] 0. 카테고리 선택 (Video / Design) */}
+              {/* [NEW] 0. 카테고리 선택 버튼 방식 (Video / Design) */}
               <div className="space-y-2">
                 <label className="text-xs uppercase font-bold text-secondary">Category</label>
-                <div className="flex gap-6 p-4 bg-background border border-primary/10 rounded-lg">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="category" 
-                      value="video" 
-                      className="accent-primary w-4 h-4"
-                      checked={currentProject.category === 'video' || !currentProject.category} 
-                      onChange={() => setCurrentProject({...currentProject, category: 'video'})} 
-                    /> 
-                    <span className="text-sm font-bold text-primary">Video (영상)</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="category" 
-                      value="design" 
-                      className="accent-primary w-4 h-4"
-                      checked={currentProject.category === 'design'} 
-                      onChange={() => setCurrentProject({...currentProject, category: 'design'})} 
-                    /> 
-                    <span className="text-sm font-bold text-primary">Design (디자인/인쇄물)</span>
-                  </label>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentProject({...currentProject, category: 'video'})}
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg border transition-colors ${
+                      (!currentProject.category || currentProject.category === 'video')
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface text-secondary border-primary/10 hover:border-primary/30 hover:text-primary'
+                    }`}
+                  >
+                    Video (영상)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentProject({...currentProject, category: 'design'})}
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg border transition-colors ${
+                      currentProject.category === 'design'
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface text-secondary border-primary/10 hover:border-primary/30 hover:text-primary'
+                    }`}
+                  >
+                    Design (디자인/인쇄물)
+                  </button>
                 </div>
               </div>
 
