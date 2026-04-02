@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom'; 
 import { getProjects, getAllTags } from '../services/dataService'; 
 import { Project } from '../types';
 import WorkCard from '../components/WorkCard';
 import { Search, X, Filter } from 'lucide-react';
 
+const INITIAL_COUNT = 6;  // 최초 표시 개수
+const LOAD_MORE = 6;      // 스크롤 시 추가 로드 개수
+
 const Works: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // 현재 URL 파악
   const { pathname } = useLocation();
   const currentCategory = pathname.includes('/design') ? 'design' : 'video';
 
-  // [수정] 3가지 카테고리의 태그를 모두 담을 상태
   const [allTags, setAllTags] = useState<{industry: string[], video_type: string[], design_type: string[]}>({ 
     industry: [], video_type: [], design_type: [] 
   });
 
-  // [NEW] 주소에 따라 화면에 보여줄 태그 리스트를 실시간으로 결정
   const availableIndustries = allTags.industry || [];
   const availableTypes = currentCategory === 'design' ? (allTags.design_type || []) : (allTags.video_type || []);
 
@@ -28,13 +28,23 @@ const Works: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // 메뉴(카테고리) 이동 시 검색어/필터 초기화
+  // Progressive loading state
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // 카테고리 이동 시 초기화
   useEffect(() => {
     setSearchQuery('');
     setSelectedIndustries([]);
     setSelectedTypes([]);
     setIsMobileFiltersOpen(false);
+    setVisibleCount(INITIAL_COUNT);
   }, [pathname]);
+
+  // 필터 변경 시 표시 개수 리셋
+  useEffect(() => {
+    setVisibleCount(INITIAL_COUNT);
+  }, [searchQuery, selectedIndustries, selectedTypes]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,13 +54,8 @@ const Works: React.FC = () => {
           getProjects(),
           getAllTags()
         ]);
-
-        // 1. 프로젝트 설정 (공개된 것만)
         setProjects(projectsData.filter(p => p.is_visible));
-        
-        // 2. 태그 목록 통째로 저장
         setAllTags(tagsData as any);
-
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {
@@ -63,28 +68,49 @@ const Works: React.FC = () => {
   // Filtering Logic
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
-      // 0. Category Filter (Video vs Design)
       const matchesCategory = (p.category || 'video') === currentCategory;
-
-      // 1. Search Text (Title or Client)
       const matchesSearch =
         searchQuery === '' ||
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.client.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // 2. Industry Filter
       const matchesIndustry =
         selectedIndustries.length === 0 ||
         p.industry_tags.some(tag => selectedIndustries.includes(tag));
-
-      // 3. Type Filter
       const matchesType =
         selectedTypes.length === 0 ||
         p.type_tags.some(tag => selectedTypes.includes(tag));
-
       return matchesCategory && matchesSearch && matchesIndustry && matchesType;
     });
   }, [projects, currentCategory, searchQuery, selectedIndustries, selectedTypes]);
+
+  // 화면에 실제 표시할 프로젝트 (잘라내기)
+  const displayedProjects = useMemo(() => {
+    return filteredProjects.slice(0, visibleCount);
+  }, [filteredProjects, visibleCount]);
+
+  const hasMore = visibleCount < filteredProjects.length;
+
+  // 무한 스크롤 — 바닥 감지 시 추가 로드
+  const handleLoadMore = useCallback(() => {
+    setVisibleCount(prev => prev + LOAD_MORE);
+  }, []);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '400px 0px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, handleLoadMore]);
 
   // Handlers
   const toggleIndustry = (tag: string) => {
@@ -202,7 +228,6 @@ const Works: React.FC = () => {
 
             {/* Type Group */}
             <div className="flex-1">
-              {/* [NEW] 현재 카테고리에 맞춰 필터 제목 변경 */}
               <h4 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
                 {currentCategory === 'video' ? 'Video Type' : 'Design Type'}
               </h4>
@@ -252,12 +277,19 @@ const Works: React.FC = () => {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-1 md:gap-4 lg:gap-6 mt-12">
-        {filteredProjects.map((project) => (
+        {displayedProjects.map((project) => (
           <div key={project.id} className="animate-slide-up">
             <WorkCard project={project} baseUrl={`/${currentCategory}`} />
           </div>
         ))}
       </div>
+
+      {/* 무한 스크롤 트리거 */}
+      {hasMore && (
+        <div ref={loadMoreRef} className="py-16 flex items-center justify-center">
+          <div className="animate-pulse text-sm font-mono text-primary/30">LOADING MORE...</div>
+        </div>
+      )}
 
       {filteredProjects.length === 0 && (
         <div className="py-32 flex flex-col items-center justify-center text-center text-primary/30 space-y-4">
