@@ -373,15 +373,40 @@ const About: React.FC = () => {
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
             Trusted Partners
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {['Partner A', 'Partner B', 'Partner C', 'Partner D', 'Partner E', 'Partner F', 'Partner G'].map((partner, i) => (
+          <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-10 transition-all duration-500 ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {[
+              { name: 'SAMSUNG', display: 'SAMSUNG', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.25em]' },
+              { name: 'LG', display: 'LG', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
+              { name: 'SK', display: 'SK', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
+              { name: 'Hyundai', display: 'HYUNDAI', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.2em]' },
+              { name: 'CJ', display: 'CJ', style: 'text-[18px] md:text-[22px] font-bold tracking-tight italic' },
+              { name: 'Hanwha', display: 'HANWHA', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.2em]' },
+              { name: 'POSCO', display: 'POSCO', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.15em]' },
+              { name: 'Volvo', display: 'VOLVO', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.3em]' },
+              { name: 'MBC', display: 'MBC', style: 'text-[16px] md:text-[20px] font-bold tracking-tight' },
+              { name: 'Lotte', display: 'LOTTE', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.2em]' },
+              { name: 'Hanjin', display: 'HANJIN', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.15em]' },
+              { name: 'Shinhan', display: 'SHINHAN', style: 'text-[11px] md:text-[13px] font-bold tracking-[0.15em]' },
+              { name: 'Hana', display: 'HANA', style: 'text-[14px] md:text-[16px] font-bold tracking-[0.2em]' },
+              { name: 'Chevrolet', display: 'CHEVROLET', style: 'text-[10px] md:text-[12px] font-bold tracking-[0.2em]' },
+              { name: 'Gmarket', display: 'Gmarket', style: 'text-[13px] md:text-[15px] font-bold tracking-normal' },
+              { name: 'LS', display: 'LS', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
+              { name: 'BBQ', display: 'BBQ', style: 'text-[16px] md:text-[20px] font-bold tracking-wider' },
+              { name: 'Roborock', display: 'roborock', style: 'text-[12px] md:text-[14px] font-medium tracking-[0.1em] lowercase' },
+              { name: 'Polestar', display: 'POLESTAR', style: 'text-[11px] md:text-[13px] font-bold tracking-[0.25em]' },
+              { name: 'KIST', display: 'KIST', style: 'text-[15px] md:text-[18px] font-bold tracking-wider' },
+              { name: 'Hyundai Rotem', display: 'HYUNDAI ROTEM', style: 'text-[9px] md:text-[11px] font-bold tracking-[0.15em]' },
+              { name: 'LIG Nex1', display: 'LIG Nex1', style: 'text-[12px] md:text-[14px] font-bold tracking-normal' },
+              { name: 'SeAH', display: 'SeAH', style: 'text-[14px] md:text-[17px] font-bold tracking-wider' },
+              { name: 'Daegu Tourism', display: '대구관광공사', style: 'text-[11px] md:text-[13px] font-bold tracking-wider' },
+            ].map((partner) => (
               <div 
-                key={i} 
-                className={`h-24 bg-surface rounded-lg flex items-center justify-center text-primary/30 font-bold border border-primary/5 hover:border-primary/20 transition-all duration-500
-                  ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-                `}
+                key={partner.name} 
+                className="h-16 flex items-center justify-center text-primary/30 hover:text-primary/60 transition-colors duration-300"
               >
-                {partner}
+                <span className={`${partner.style} whitespace-nowrap select-none`}>
+                  {partner.display}
+                </span>
               </div>
             ))}
           </div>
