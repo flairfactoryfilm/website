@@ -4,16 +4,42 @@ import {
   Users, Globe, Layers, 
   ArrowRight
 } from 'lucide-react';
+import { getProjects } from '../services/dataService';
+import { Project } from '../types';
 
 const About: React.FC = () => {
   // --- Process Tab State ---
   const [processTab, setProcessTab] = useState<'video' | 'design'>('video');
 
+  // --- Random Video Projects for Business Areas ---
+  const [randomVideos, setRandomVideos] = useState<(Project | null)[]>([null, null, null, null]);
+
+  useEffect(() => {
+    const fetchRandomVideos = async () => {
+      try {
+        const all = await getProjects();
+        const videoProjects = all.filter(p => p.is_visible && (p.category === 'video' || !p.category) && (p.vimeo_id || p.video_url));
+        
+        // 셔플 후 최대 4개 선택
+        const shuffled = [...videoProjects].sort(() => Math.random() - 0.5);
+        const picked = [
+          shuffled[0] || null,
+          shuffled[1] || null,
+          shuffled[2] || null,
+          shuffled[3] || null,
+        ];
+        setRandomVideos(picked);
+      } catch (error) {
+        console.error('Failed to fetch random videos:', error);
+      }
+    };
+    fetchRandomVideos();
+  }, []);
+
   // Partners Logic
   const partnersSectionRef = useRef<HTMLElement>(null);
   const [isPartnersVisible, setIsPartnersVisible] = useState(false);
 
-  // Partners Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -24,69 +50,78 @@ const About: React.FC = () => {
       },
       { threshold: 0.2 } 
     );
-
     if (partnersSectionRef.current) {
       observer.observe(partnersSectionRef.current);
     }
-
     return () => observer.disconnect();
   }, []);
 
-  // Business Items Data
+  // Video Business Area Items
   const videoBusinessItems = [
     {
-      id: 1,
-      title: "시네마틱 실사 촬영",
       sub: "Cinematic Reality",
+      title: "시네마틱 실사 촬영",
       desc: "브랜드의 이야기를 가장 진솔하게 담아내는 힘. 현장의 공기까지 포착하는 인터뷰 촬영부터, 제품의 디테일을 극대화하는 매크로 촬영까지. 피사체의 본질을 영화적 미장센으로 완성합니다.",
-      img: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1600&q=80"
     },
     {
-      id: 2,
-      title: "드론 시네마토그래피",
       sub: "Perspective from Above",
+      title: "드론 시네마토그래피",
       desc: "지상에서는 볼 수 없었던 압도적인 스케일. 숙련된 전문가의 드론 컨트롤을 통해 평범한 풍경을 비범한 시각적 경험으로 바꿉니다. 공간의 깊이와 역동성을 더해 영상의 품격을 높입니다.",
-      img: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=1600&q=80"
     },
     {
-      id: 3,
-      title: "3D 제품 모델링",
       sub: "Hyper-Realistic Visualization",
+      title: "3D 제품 모델링",
       desc: "실사를 뛰어넘는 완벽한 제어. 물리적으로 촬영 불가능한 제품의 내부 구조나 가상의 공간을 3D로 구현합니다. 빛과 질감을 정교하게 설계하여, 제품이 가진 최상의 아름다움을 시각화합니다.",
-      img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1600&q=80"
     },
     {
-      id: 4,
-      title: "기업 모션그래픽",
       sub: "Visualizing Vision",
+      title: "기업 모션그래픽",
       desc: "보이지 않는 비전을 보이게 만드는 기술. 복잡한 비즈니스 모델이나 추상적인 데이터를 직관적인 모션그래픽으로 변환합니다. 기업 가치가 대중에게 명확하고 세련되게 전달되도록 디자인합니다.",
-      img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80"
     }
   ];
 
-  const designBusinessItems = [
-    {
-      id: 1,
-      title: "브로슈어 / 리플렛",
-      sub: "Brochure & Leaflet",
-      desc: "기업과 브랜드의 핵심 메시지를 가장 효과적으로 전달하는 인쇄 매체. 정보 구조 설계부터 시각적 완성도까지, 읽히는 디자인을 만듭니다.",
-      img: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=1600&q=80"
-    },
-    {
-      id: 2,
-      title: "포스터 / 전시 그래픽",
-      sub: "Poster & Exhibition",
-      desc: "공간 안에서 시선을 사로잡는 비주얼 커뮤니케이션. 전시 부스, 행사장, 옥외 매체 등 다양한 환경에 최적화된 대형 그래픽을 제작합니다.",
-      img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1600&q=80"
-    },
-    {
-      id: 3,
-      title: "제품 매뉴얼",
-      sub: "Product Manual",
-      desc: "복잡한 제품 정보를 사용자 관점에서 명확하게 정리합니다. 다국어 대응, 기술 일러스트, 인쇄 규격 관리까지 체계적으로 수행합니다.",
-      img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80"
+  // Video Media Renderer (WorkCard 로직 차용)
+  const renderVideoMedia = (project: Project | null) => {
+    if (!project) {
+      return <div className="absolute inset-0 w-full h-full bg-surface" />;
     }
-  ];
+
+    // Vimeo
+    if (project.vimeo_id) {
+      return (
+        <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+          <iframe
+            src={`https://player.vimeo.com/video/${project.vimeo_id}?background=1&autoplay=1&loop=1&byline=0&title=0&muted=1`}
+            className="w-full h-full scale-[1.3]"
+            allow="autoplay; fullscreen; picture-in-picture"
+            title={project.title}
+            frameBorder="0"
+          />
+        </div>
+      );
+    }
+
+    // Direct video
+    if (project.video_url) {
+      const thumb = project.thumbnail_url || (project.images?.length > 0 ? project.images[0] : '');
+      return (
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src={project.video_url}
+          poster={thumb}
+          autoPlay muted loop playsInline
+        />
+      );
+    }
+
+    // Fallback: thumbnail image
+    const thumb = project.thumbnail_url || (project.images?.length > 0 ? project.images[0] : '');
+    return thumb ? (
+      <img src={thumb} alt={project.title} className="absolute inset-0 w-full h-full object-cover" />
+    ) : (
+      <div className="absolute inset-0 w-full h-full bg-surface" />
+    );
+  };
 
   // Process Data
   const videoProcess = [
@@ -110,7 +145,7 @@ const About: React.FC = () => {
   return (
     <div className="w-full animate-fade-in pb-20">
       
-      {/* 1. Hero Section (Sticky Parallax / Overlay) */}
+      {/* 1. Hero Section */}
       <section className="relative h-[200vh] bg-background">
         <div className="sticky top-0 h-screen flex flex-col justify-center items-center text-center px-4 md:px-6 z-20 mix-blend-exclusion text-white">
           <span className="block text-xs font-bold uppercase tracking-widest mb-4 animate-slide-up">
@@ -136,7 +171,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Why Flair Factory? — 순차 모션 제거, 동시 표시 */}
+      {/* 2. Why Flair Factory? */}
       <section className="relative bg-background z-30 pt-24 md:pt-32 px-4 md:px-6 pb-20">
         <div className="max-w-7xl mx-auto w-full">
           
@@ -146,7 +181,6 @@ const About: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1: In-House — 영상+디자인 포괄 */}
             <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between transition-colors duration-300">
               <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                 <Users size={28} />
@@ -159,7 +193,6 @@ const About: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 2: Global Native */}
             <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between transition-colors duration-300">
               <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                 <Globe size={28} />
@@ -172,7 +205,6 @@ const About: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 3: Video × Design */}
             <div className="group aspect-square p-8 md:p-10 bg-surface rounded-2xl border border-primary/5 hover:bg-primary flex flex-col justify-between transition-colors duration-300">
               <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-background group-hover:text-primary transition-colors">
                 <Layers size={28} />
@@ -188,7 +220,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Business Areas — 세로 스크롤, Video + Design 그룹 분리 */}
+      {/* 3. Business Areas */}
       <section className="relative bg-background z-30 pt-24 md:pt-32 px-4 md:px-6 pb-20 border-t border-primary/5">
         <div className="max-w-7xl mx-auto w-full">
           
@@ -199,7 +231,7 @@ const About: React.FC = () => {
             </p>
           </div>
 
-          {/* Video Group */}
+          {/* ===== Video Group — WorkCard 스타일 ===== */}
           <div className="mb-24">
             <div className="flex items-center justify-between mb-10 border-b border-primary/10 pb-4">
               <h3 className="text-xl md:text-2xl font-display font-bold text-primary">Video</h3>
@@ -207,30 +239,40 @@ const About: React.FC = () => {
                 View Works <ArrowRight size={14} />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {videoBusinessItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-surface rounded-2xl overflow-hidden border border-primary/5 group"
-                >
-                  <div className="relative h-48 md:h-56 overflow-hidden">
-                    <img 
-                      src={item.img} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-12">
+              {videoBusinessItems.map((item, index) => (
+                <div key={index}>
+                  {/* 16:9 Video Area */}
+                  <div className="relative w-full aspect-video bg-neutral-900 overflow-hidden mb-5">
+                    {/* Base thumbnail layer */}
+                    {randomVideos[index] && (randomVideos[index]!.thumbnail_url || (randomVideos[index]!.images?.length > 0)) && (
+                      <img 
+                        src={randomVideos[index]!.thumbnail_url || randomVideos[index]!.images[0]} 
+                        alt="" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-50"
+                      />
+                    )}
+                    {/* Active media */}
+                    {renderVideoMedia(randomVideos[index])}
                   </div>
-                  <div className="p-6 md:p-8">
-                    <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-2">{item.sub}</p>
-                    <h4 className="text-lg md:text-xl font-bold text-primary mb-3">{item.title}</h4>
-                    <p className="text-secondary text-sm leading-relaxed">{item.desc}</p>
-                  </div>
+
+                  {/* Text: sub 작게 → title 크게 → desc */}
+                  <p className="text-xs font-bold text-secondary mb-1 uppercase tracking-normal">
+                    {item.sub}
+                  </p>
+                  <h4 className="text-2xl font-display font-bold text-primary leading-tight mb-3">
+                    {item.title}
+                  </h4>
+                  <p className="text-secondary text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Design Group */}
+          {/* ===== Design Group — 대안 A: 좌우 분할, 단일 항목 ===== */}
           <div>
             <div className="flex items-center justify-between mb-10 border-b border-primary/10 pb-4">
               <h3 className="text-xl md:text-2xl font-display font-bold text-primary">Design</h3>
@@ -238,26 +280,30 @@ const About: React.FC = () => {
                 View Works <ArrowRight size={14} />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {designBusinessItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-surface rounded-2xl overflow-hidden border border-primary/5 group"
-                >
-                  <div className="relative h-48 md:h-56 overflow-hidden">
-                    <img 
-                      src={item.img} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-6 md:p-8">
-                    <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-2">{item.sub}</p>
-                    <h4 className="text-lg md:text-xl font-bold text-primary mb-3">{item.title}</h4>
-                    <p className="text-secondary text-sm leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+              {/* Left: 대표 이미지 */}
+              <div className="relative aspect-[4/3] overflow-hidden bg-surface">
+                <img 
+                  src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=1600&q=80" 
+                  alt="Print Design" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Right: 텍스트 */}
+              <div>
+                <p className="text-xs font-bold text-secondary mb-2 uppercase tracking-wider">Print Design</p>
+                <h4 className="text-2xl md:text-3xl font-display font-bold text-primary leading-tight mb-4">
+                  인쇄 디자인
+                </h4>
+                <p className="text-secondary leading-relaxed mb-6">
+                  브로슈어, 리플렛, 회사소개서 등 기업 인쇄물 전반을 제작합니다. 정보 구조 설계부터 시각적 완성도, 인쇄 규격 관리까지 체계적으로 수행하며, 다국어 대응이 필요한 글로벌 프로젝트에도 대응합니다.
+                </p>
+                <Link to="/design" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors">
+                  View Portfolio <ArrowRight size={14} />
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -269,7 +315,6 @@ const About: React.FC = () => {
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
             
-            {/* Left: Title + Tab */}
             <div className="md:w-1/3">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-primary mb-6">Process</h2>
               <p className="text-secondary leading-relaxed mb-8">
@@ -277,7 +322,6 @@ const About: React.FC = () => {
                 기획부터 납품까지 빈틈없는 결과물을 만듭니다.
               </p>
               
-              {/* Tab Buttons */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setProcessTab('video')}
@@ -302,7 +346,6 @@ const About: React.FC = () => {
               </div>
             </div>
             
-            {/* Right: Process Steps */}
             <div className="md:w-2/3 space-y-0">
               {activeProcess.map((item, index) => (
                 <div 
@@ -324,7 +367,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Partners — 순차 등장(transitionDelay) 제거, 동시 표시 */}
+      {/* 5. Partners */}
       <section ref={partnersSectionRef} className="px-4 md:px-6 py-32 bg-background border-t border-primary/5 relative z-30">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
