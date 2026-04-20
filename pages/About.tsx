@@ -373,40 +373,56 @@ const About: React.FC = () => {
           <h3 className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-12 text-center">
             Trusted Partners
           </h3>
-          <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-10 transition-all duration-500 ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-12 transition-all duration-500 ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             {[
-              { name: 'SAMSUNG', display: 'SAMSUNG', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.25em]' },
-              { name: 'LG', display: 'LG', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
-              { name: 'SK', display: 'SK', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
-              { name: 'Hyundai', display: 'HYUNDAI', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.2em]' },
-              { name: 'CJ', display: 'CJ', style: 'text-[18px] md:text-[22px] font-bold tracking-tight italic' },
-              { name: 'Hanwha', display: 'HANWHA', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.2em]' },
-              { name: 'POSCO', display: 'POSCO', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.15em]' },
-              { name: 'Volvo', display: 'VOLVO', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.3em]' },
-              { name: 'MBC', display: 'MBC', style: 'text-[16px] md:text-[20px] font-bold tracking-tight' },
-              { name: 'Lotte', display: 'LOTTE', style: 'text-[13px] md:text-[15px] font-bold tracking-[0.2em]' },
-              { name: 'Hanjin', display: 'HANJIN', style: 'text-[12px] md:text-[14px] font-bold tracking-[0.15em]' },
-              { name: 'Shinhan', display: 'SHINHAN', style: 'text-[11px] md:text-[13px] font-bold tracking-[0.15em]' },
-              { name: 'Hana', display: 'HANA', style: 'text-[14px] md:text-[16px] font-bold tracking-[0.2em]' },
-              { name: 'Chevrolet', display: 'CHEVROLET', style: 'text-[10px] md:text-[12px] font-bold tracking-[0.2em]' },
-              { name: 'Gmarket', display: 'Gmarket', style: 'text-[13px] md:text-[15px] font-bold tracking-normal' },
-              { name: 'LS', display: 'LS', style: 'text-[18px] md:text-[22px] font-bold tracking-tight' },
-              { name: 'BBQ', display: 'BBQ', style: 'text-[16px] md:text-[20px] font-bold tracking-wider' },
-              { name: 'Roborock', display: 'roborock', style: 'text-[12px] md:text-[14px] font-medium tracking-[0.1em] lowercase' },
-              { name: 'Polestar', display: 'POLESTAR', style: 'text-[11px] md:text-[13px] font-bold tracking-[0.25em]' },
-              { name: 'KIST', display: 'KIST', style: 'text-[15px] md:text-[18px] font-bold tracking-wider' },
-              { name: 'Hyundai Rotem', display: 'HYUNDAI ROTEM', style: 'text-[9px] md:text-[11px] font-bold tracking-[0.15em]' },
-              { name: 'LIG Nex1', display: 'LIG Nex1', style: 'text-[12px] md:text-[14px] font-bold tracking-normal' },
-              { name: 'SeAH', display: 'SeAH', style: 'text-[14px] md:text-[17px] font-bold tracking-wider' },
-              { name: 'Daegu Tourism', display: '대구관광공사', style: 'text-[11px] md:text-[13px] font-bold tracking-wider' },
+              { name: 'SAMSUNG', file: 'samsung.svg' },
+              { name: 'LG', file: 'lg.svg' },
+              { name: 'SK', file: 'sk.svg' },
+              { name: 'HYUNDAI', file: 'hyundai.svg' },
+              { name: 'CJ', file: 'cj.svg' },
+              { name: 'HANWHA', file: 'hanwha.svg' },
+              { name: 'POSCO', file: 'posco.svg' },
+              { name: 'VOLVO', file: 'volvo.svg' },
+              { name: 'MBC', file: 'mbc.svg' },
+              { name: 'LOTTE', file: 'lotte.svg' },
+              { name: 'HANJIN', file: 'hanjin.svg' },
+              { name: 'SHINHAN', file: 'shinhan.svg' },
+              { name: 'HANA', file: 'hana.svg' },
+              { name: 'CHEVROLET', file: 'chevrolet.svg' },
+              { name: 'Gmarket', file: 'gmarket.svg' },
+              { name: 'LS', file: 'ls.svg' },
+              { name: 'BBQ', file: 'bbq.svg' },
+              { name: 'roborock', file: 'roborock.svg' },
+              { name: 'POLESTAR', file: 'polestar.svg' },
+              { name: 'KIST', file: 'kist.svg' },
+              { name: 'HYUNDAI ROTEM', file: 'hyundai-rotem.svg' },
+              { name: 'LIG Nex1', file: 'lig-nex1.svg' },
+              { name: 'SeAH', file: 'seah.svg' },
+              { name: '대구관광공사', file: 'daegu-tourism.svg' },
             ].map((partner) => (
-              <div 
-                key={partner.name} 
-                className="h-16 flex items-center justify-center text-primary/30 hover:text-primary/60 transition-colors duration-300"
+              <div
+                key={partner.name}
+                className="h-14 md:h-16 flex items-center justify-center group"
+                title={partner.name}
               >
-                <span className={`${partner.style} whitespace-nowrap select-none`}>
-                  {partner.display}
-                </span>
+                <img
+                  src={`/partners/${partner.file}`}
+                  alt={partner.name}
+                  loading="lazy"
+                  className="max-h-full max-w-full object-contain transition-all duration-300 opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 dark:opacity-70 dark:grayscale-0 dark:brightness-0 dark:invert dark:group-hover:opacity-100"
+                  onError={(e) => {
+                    // 로고 파일이 아직 없으면 기업명 텍스트로 폴백
+                    const img = e.currentTarget;
+                    const parent = img.parentElement;
+                    if (parent && !parent.querySelector('.logo-fallback')) {
+                      img.style.display = 'none';
+                      const span = document.createElement('span');
+                      span.className = 'logo-fallback text-xs md:text-sm font-bold tracking-wider text-primary/30 group-hover:text-primary/60 dark:text-primary/50 dark:group-hover:text-primary transition-colors whitespace-nowrap select-none';
+                      span.textContent = partner.name;
+                      parent.appendChild(span);
+                    }
+                  }}
+                />
               </div>
             ))}
           </div>
