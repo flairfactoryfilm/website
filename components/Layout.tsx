@@ -172,7 +172,7 @@ const Layout: React.FC = () => {
           {/* Right: Essential Contact Info */}
           <div className="flex flex-col md:items-end gap-1 text-sm text-secondary">
             {/* 실제 주소/연락처 */}
-            <address className="not-italic">서울특별시 강동구 성안로 92 4층</address>
+            <address className="not-italic">서울 강동구 진황도로 172 3층</address>
             <a href="tel:+82-2-488-9712" className="hover:text-primary transition-colors">+82-2-488-9712</a>
             <a href="mailto:flairfactoryfilm@gmail.com" className="hover:text-primary transition-colors">flairfactoryfilm@gmail.com</a>
           </div>
