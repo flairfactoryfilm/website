@@ -179,8 +179,12 @@ const Admin: React.FC = () => {
       try {
         const url = await uploadImage(e.target.files[0]);
         setCurrentPopup(prev => ({ ...prev, image_url: url }));
-      } catch (error: any) { alert("업로드 실패: " + error.message); } 
-      finally { setIsUploading(false); }
+      } catch (error: any) {
+        alert("업로드 실패: " + (error?.message || '알 수 없는 오류'));
+      } finally {
+        setIsUploading(false);
+        e.target.value = '';
+      }
     }
   };
 
@@ -197,7 +201,13 @@ const Admin: React.FC = () => {
           const updatedThumb = prev.thumbnail_url || updatedImages[0];
           return { ...prev, images: updatedImages, thumbnail_url: updatedThumb };
         });
-      } catch (error: any) { alert("업로드 실패"); } finally { setIsUploading(false); }
+      } catch (error: any) {
+        alert("업로드 실패: " + (error?.message || '알 수 없는 오류'));
+      } finally {
+        setIsUploading(false);
+        // 같은 파일 재선택 가능하도록 input 리셋
+        e.target.value = '';
+      }
     }
   };
 
@@ -530,7 +540,7 @@ const Admin: React.FC = () => {
                 {currentProject.images && currentProject.images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {currentProject.images.map((url, index) => (
-                      <div key={`${url}-${index}`} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDrop={(e) => handleDrop(e, index)} className={`group relative aspect-square bg-neutral-900 rounded-lg overflow-hidden border-2 transition-all cursor-move ${draggedImageIndex === index ? 'opacity-50' : 'opacity-100'} ${currentProject.thumbnail_url === url ? 'border-primary' : 'border-transparent'}`}>
+                      <div key={`${url}-${index}`} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, index)} className={`group relative aspect-square bg-neutral-900 rounded-lg overflow-hidden border-2 transition-all cursor-move ${draggedImageIndex === index ? 'opacity-50' : 'opacity-100'} ${currentProject.thumbnail_url === url ? 'border-primary' : 'border-transparent'}`}>
                         <img src={url} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                           <div className="flex justify-end"><button type="button" onClick={() => removeImage(index)} className="p-1 bg-red-500/80 text-white rounded hover:bg-red-500 transition-colors"><X size={14} /></button></div>
