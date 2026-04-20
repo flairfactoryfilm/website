@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { getProjectById, getProjects } from '../services/dataService';
 import { Project } from '../types';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const WorksDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { pathname } = useLocation();
+  // 현재 경로에서 카테고리 추출 (/video/:id 또는 /design/:id)
+  const currentCategory = pathname.includes('/design') ? 'design' : 'video';
+  const baseUrl = `/${currentCategory}`;
+
   const [project, setProject] = useState<Project | null>(null);
   const [prevProject, setPrevProject] = useState<Project | null>(null);
   const [nextProject, setNextProject] = useState<Project | null>(null);
@@ -19,21 +24,28 @@ const WorksDetail: React.FC = () => {
           getProjectById(id),
           getProjects()
         ]);
-        
-        const visibleProjects = all.filter(p => p.is_visible);
-        
+
+        // 같은 카테고리 + 노출 중인 프로젝트만 prev/next 풀에 포함
+        const sameCategoryProjects = all.filter(
+          p => p.is_visible && (p.category || 'video') === currentCategory
+        );
+
         setProject(current || null);
 
-        if (current && visibleProjects.length > 0) {
-          const currentIndex = visibleProjects.findIndex(p => p.id === current.id);
-          setPrevProject(currentIndex > 0 ? visibleProjects[currentIndex - 1] : null);
-          setNextProject(currentIndex < visibleProjects.length - 1 ? visibleProjects[currentIndex + 1] : null);
+        if (current && sameCategoryProjects.length > 0) {
+          const currentIndex = sameCategoryProjects.findIndex(p => p.id === current.id);
+          setPrevProject(currentIndex > 0 ? sameCategoryProjects[currentIndex - 1] : null);
+          setNextProject(
+            currentIndex >= 0 && currentIndex < sameCategoryProjects.length - 1
+              ? sameCategoryProjects[currentIndex + 1]
+              : null
+          );
         }
       }
       setLoading(false);
     };
     fetchData();
-  }, [id]);
+  }, [id, currentCategory]);
 
   // 날짜 포맷 변환 함수 (YYYY-MM-DD -> YYYY. MM)
   const formatWorkDate = (dateString: string) => {
@@ -56,8 +68,8 @@ const WorksDetail: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h2 className="text-2xl font-display font-bold text-primary">Project Not Found</h2>
-        <Link to="/works" className="text-sm underline underline-offset-4 hover:text-secondary text-primary">
-          Back to Works
+        <Link to={baseUrl} className="text-sm underline underline-offset-4 hover:text-secondary text-primary">
+          Back to {currentCategory === 'design' ? 'Design' : 'Video'} Works
         </Link>
       </div>
     );
@@ -67,9 +79,9 @@ const WorksDetail: React.FC = () => {
     <div className="animate-fade-in pb-20">
       {/* Back Navigation */}
       <div className="px-4 md:px-6 mb-6">
-        <Link to="/works" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">
+        <Link to={baseUrl} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">
           <ArrowLeft size={14} />
-          Back to Works
+          Back to {currentCategory === 'design' ? 'Design' : 'Video'} Works
         </Link>
       </div>
 
@@ -184,7 +196,7 @@ const WorksDetail: React.FC = () => {
           
           <div className="p-6 md:p-12 hover:bg-surface transition-colors group">
             {prevProject ? (
-              <Link to={`/works/${prevProject.id}`} className="flex flex-col items-start gap-4">
+              <Link to={`${baseUrl}/${prevProject.id}`} className="flex flex-col items-start gap-4">
                 <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary group-hover:text-primary transition-colors">
                   <ArrowLeft size={14} /> Previous Project
                 </span>
@@ -202,7 +214,7 @@ const WorksDetail: React.FC = () => {
 
           <div className="p-6 md:p-12 hover:bg-surface transition-colors group text-right">
              {nextProject ? (
-              <Link to={`/works/${nextProject.id}`} className="flex flex-col items-end gap-4">
+              <Link to={`${baseUrl}/${nextProject.id}`} className="flex flex-col items-end gap-4">
                 <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary group-hover:text-primary transition-colors">
                   Next Project <ArrowRight size={14} />
                 </span>
