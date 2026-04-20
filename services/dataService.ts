@@ -157,6 +157,17 @@ export const deleteTag = async (name: string, category: string) => {
 
 // 이미지 파일을 Supabase Storage에 업로드하고 공개 URL 반환
 export const uploadImage = async (file: File): Promise<string> => {
+  // --- 파일 검증 ---
+  const MAX_SIZE = 20 * 1024 * 1024; // 20MB 상한
+  const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+
+  if (file.size > MAX_SIZE) {
+    throw new Error(`파일이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)}MB). 20MB 이하로 업로드해주세요.`);
+  }
+  if (!ALLOWED_MIME.includes(file.type)) {
+    throw new Error(`지원하지 않는 형식입니다 (${file.type || '알 수 없음'}). JPG, PNG, WEBP, GIF, SVG만 업로드 가능합니다.`);
+  }
+
   // 파일명 중복 방지를 위한 랜덤 접두사 생성
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
