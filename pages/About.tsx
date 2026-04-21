@@ -374,46 +374,34 @@ const About: React.FC = () => {
             Trusted Partners
           </h3>
           <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-12 transition-all duration-500 ${isPartnersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            {([
-              // shape:
-              //   'square'  – 정사각형에 가까운 로고 (종횡비 1.0~1.5): 시각 높이를 낮춰 덩치 맞춤
-              //   'stocky'  – 세미 스퀘어 (1.5~2.5): 살짝 낮춤
-              //   'normal'  – 일반 워드마크 (2.5~5.0): 기준 높이
-              //   'wide'    – 매우 가로로 긴 로고 (5.0+): 높이는 기준이되 max-w로 폭 억제
-              { name: 'SAMSUNG', file: 'samsung.svg', shape: 'wide' },
-              { name: 'LG', file: 'lg.svg', shape: 'stocky' },
-              { name: 'SK', file: 'sk.svg', shape: 'square' },
-              { name: 'HYUNDAI', file: 'hyundai.svg', shape: 'wide' },
-              { name: 'CJ', file: 'cj.svg', shape: 'square' },
-              { name: 'HANWHA', file: 'hanwha.svg', shape: 'normal' },
-              { name: 'POSCO', file: 'posco.svg', shape: 'normal' },
-              { name: 'VOLVO', file: 'volvo.svg', shape: 'wide' },
-              { name: 'MBC', file: 'mbc.svg', shape: 'normal' },
-              { name: 'LOTTE', file: 'lotte.svg', shape: 'wide' },
-              { name: 'HANJIN', file: 'hanjin.svg', shape: 'wide' },
-              { name: 'SHINHAN', file: 'shinhan.svg', shape: 'normal' },
-              { name: 'HANA', file: 'hana.svg', shape: 'normal' },
-              { name: 'CHEVROLET', file: 'chevrolet.svg', shape: 'wide' },
-              { name: 'Gmarket', file: 'gmarket.svg', shape: 'normal' },
-              { name: 'LS', file: 'ls.svg', shape: 'stocky' },
-              { name: 'BBQ', file: 'bbq.svg', shape: 'stocky' },
-              { name: 'roborock', file: 'roborock.svg', shape: 'wide' },
-              { name: 'POLESTAR', file: 'polestar.svg', shape: 'normal' },
-              { name: 'KIST', file: 'kist.svg', shape: 'normal' },
-              { name: 'HYUNDAI ROTEM', file: 'hyundai-rotem.svg', shape: 'stocky' },
-              { name: 'LIG Nex1', file: 'lig-nex1.svg', shape: 'wide' },
-              { name: 'SeAH', file: 'seah.svg', shape: 'normal' },
-              { name: '대구관광공사', file: 'daegu-tourism.svg', shape: 'normal' },
-            ] as const).map((partner) => {
-              // 셀 높이는 일정하게 유지하고, 로고 shape에 따라 이미지의 max-h / max-w를 다르게 주어 시각 크기를 균일화
-              const imgSize = {
-                square: 'max-h-[65%] max-w-[65%]',  // 정사각형 – 가장 작게
-                stocky: 'max-h-[80%] max-w-[85%]',  // 세미 스퀘어 – 조금 작게
-                normal: 'max-h-[72%] max-w-full',   // 워드마크 기준
-                wide:   'max-h-[55%] max-w-full',   // 와이드형 – 높이를 낮춰 면적 과점 방지
-              }[partner.shape];
-
-              return (
+            {[
+              // 로고 PNG는 일러스트에서 시각보정 완료된 상태로 업로드 (같은 캔버스 크기, 동일 시각 무게감 기준).
+              // 권장 export 스펙: 고정 캔버스(예: 400×120 또는 500×150), 2x 해상도, 투명 배경, 로고 색상은 단색(#000 또는 #fff)으로 통일.
+              { name: 'SAMSUNG', file: 'samsung.png' },
+              { name: 'LG', file: 'lg.png' },
+              { name: 'SK', file: 'sk.png' },
+              { name: 'HYUNDAI', file: 'hyundai.png' },
+              { name: 'CJ', file: 'cj.png' },
+              { name: 'HANWHA', file: 'hanwha.png' },
+              { name: 'POSCO', file: 'posco.png' },
+              { name: 'VOLVO', file: 'volvo.png' },
+              { name: 'MBC', file: 'mbc.png' },
+              { name: 'LOTTE', file: 'lotte.png' },
+              { name: 'HANJIN', file: 'hanjin.png' },
+              { name: 'SHINHAN', file: 'shinhan.png' },
+              { name: 'HANA', file: 'hana.png' },
+              { name: 'CHEVROLET', file: 'chevrolet.png' },
+              { name: 'Gmarket', file: 'gmarket.png' },
+              { name: 'LS', file: 'ls.png' },
+              { name: 'BBQ', file: 'bbq.png' },
+              { name: 'roborock', file: 'roborock.png' },
+              { name: 'POLESTAR', file: 'polestar.png' },
+              { name: 'KIST', file: 'kist.png' },
+              { name: 'HYUNDAI ROTEM', file: 'hyundai-rotem.png' },
+              { name: 'LIG Nex1', file: 'lig-nex1.png' },
+              { name: 'SeAH', file: 'seah.png' },
+              { name: '대구관광공사', file: 'daegu-tourism.png' },
+            ].map((partner) => (
               <div
                 key={partner.name}
                 className="h-14 md:h-16 flex items-center justify-center group"
@@ -423,7 +411,7 @@ const About: React.FC = () => {
                   src={`/partners/${partner.file}`}
                   alt={partner.name}
                   loading="lazy"
-                  className={`${imgSize} object-contain transition-all duration-300 opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 dark:opacity-70 dark:grayscale-0 dark:brightness-0 dark:invert dark:group-hover:opacity-100`}
+                  className="max-h-full w-auto object-contain transition-all duration-300 opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 dark:opacity-70 dark:grayscale-0 dark:brightness-0 dark:invert dark:group-hover:opacity-100"
                   onError={(e) => {
                     // 로고 파일이 아직 없으면 기업명 텍스트로 폴백
                     const img = e.currentTarget;
@@ -438,8 +426,7 @@ const About: React.FC = () => {
                   }}
                 />
               </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </section>
