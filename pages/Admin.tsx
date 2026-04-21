@@ -19,8 +19,167 @@ import {
 import { Project, Popup } from '../types';
 import { 
   Shield, Plus, Edit2, Trash2, Mail, LayoutGrid, Tags, 
-  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar, MessageSquare
+  Eye, EyeOff, X, AlertTriangle, Save, Upload, GripVertical, Star, PenLine, LogOut, Loader2, Calendar, MessageSquare,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
+
+/**
+ * MonthPicker – 사이트 룩에 맞춘 연-월 피커
+ * value/onChange 포맷: 'YYYY-MM' (빈 문자열이면 미선택)
+ */
+interface MonthPickerProps {
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}
+
+const MonthPicker: React.FC<MonthPickerProps> = ({ value, onChange, required }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  // 현재 선택된 값에서 year/month 파싱
+  const [selectedYear, selectedMonth] = value
+    ? value.split('-').map(Number)
+    : [0, 0];
+
+  // 드롭다운에서 보고 있는 연도 (선택값이 없으면 현재 연도)
+  const [viewYear, setViewYear] = useState<number>(
+    selectedYear || new Date().getFullYear()
+  );
+
+  // 피커를 열 때마다 view를 현재 선택된 연도로 동기화
+  useEffect(() => {
+    if (isOpen) {
+      setViewYear(selectedYear || new Date().getFullYear());
+    }
+  }, [isOpen, selectedYear]);
+
+  // 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (month: number) => {
+    const mm = String(month).padStart(2, '0');
+    onChange(`${viewYear}-${mm}`);
+    setIsOpen(false);
+  };
+
+  const displayLabel = value
+    ? `${selectedYear}. ${String(selectedMonth).padStart(2, '0')}`
+    : 'Select year and month';
+
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      {/* required 검증을 위한 hidden input */}
+      <input
+        type="text"
+        required={required}
+        value={value}
+        onChange={() => {}}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        // hidden이지만 form validation에 걸리도록 살짝 보이게
+        style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+      />
+
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full bg-background border p-3 rounded-lg text-left outline-none transition-colors flex items-center justify-between ${
+          isOpen ? 'border-primary' : 'border-primary/10 hover:border-primary/30'
+        } ${value ? 'text-primary' : 'text-secondary'}`}
+      >
+        <span className="text-sm">{displayLabel}</span>
+        <Calendar size={18} className="text-secondary" />
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-50 mt-2 w-full bg-background border border-primary/10 rounded-lg shadow-xl overflow-hidden">
+          {/* Year navigator */}
+          <div className="flex items-center justify-between px-3 py-3 border-b border-primary/10">
+            <button
+              type="button"
+              onClick={() => setViewYear(viewYear - 1)}
+              className="p-1.5 rounded-md text-secondary hover:text-primary hover:bg-surface transition-colors"
+              aria-label="Previous year"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm font-bold text-primary tracking-wider tabular-nums">
+              {viewYear}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewYear(viewYear + 1)}
+              className="p-1.5 rounded-md text-secondary hover:text-primary hover:bg-surface transition-colors"
+              aria-label="Next year"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          {/* Month grid */}
+          <div className="grid grid-cols-3 gap-1 p-2">
+            {months.map((label, idx) => {
+              const month = idx + 1;
+              const isSelected = viewYear === selectedYear && month === selectedMonth;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleSelect(month)}
+                  className={`py-2.5 rounded-md text-xs font-bold tracking-wider transition-colors ${
+                    isSelected
+                      ? 'bg-primary text-background'
+                      : 'text-secondary hover:text-primary hover:bg-surface'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer – Today shortcut */}
+          <div className="px-2 pb-2">
+            <button
+              type="button"
+              onClick={() => {
+                const now = new Date();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                onChange(`${now.getFullYear()}-${mm}`);
+                setIsOpen(false);
+              }}
+              className="w-full py-2 rounded-md text-[10px] uppercase tracking-widest font-bold text-secondary hover:text-primary hover:bg-surface transition-colors"
+            >
+              This Month
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Admin: React.FC = () => {
   // --- Auth State ---
@@ -516,7 +675,14 @@ const Admin: React.FC = () => {
               {/* 기본 정보 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2"><label className="text-xs uppercase font-bold text-secondary">Title</label><input required className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.title || ''} onChange={e => setCurrentProject({...currentProject, title: e.target.value})} placeholder="프로젝트 제목" /></div>
-                <div className="space-y-2"><label className="text-xs uppercase font-bold text-secondary">Work Date (Year-Month)</label><div className="relative"><input type="month" required className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none appearance-none" value={workDateInput} onChange={e => setWorkDateInput(e.target.value)} /><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary"><Calendar size={18} /></div></div></div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-secondary">Work Date (Year-Month)</label>
+                  <MonthPicker
+                    value={workDateInput}
+                    onChange={setWorkDateInput}
+                    required
+                  />
+                </div>
               </div>
 
                <div className="space-y-2"><label className="text-xs uppercase font-bold text-secondary">Client</label><input required className="w-full bg-background border border-primary/10 p-3 rounded-lg text-primary focus:border-primary outline-none" value={currentProject.client || ''} onChange={e => setCurrentProject({...currentProject, client: e.target.value})} placeholder="클라이언트명" /></div>
