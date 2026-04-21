@@ -44,6 +44,9 @@ const Layout: React.FC = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
+  // Home은 히어로 영상이 헤더와 맞닿아야 하고 Let's Talk이 footer와 연속되어야 하므로 공통 여백을 생략
+  const isHome = pathname === '/';
+
   // --- [NEW] Popup Fetch Logic ---
   useEffect(() => {
     const fetchPopup = async () => {
@@ -151,12 +154,12 @@ const Layout: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 w-full pt-24 md:pt-32">
+      <main className={`flex-1 w-full ${isHome ? '' : 'pt-24 md:pt-32'}`}>
         <Outlet />
       </main>
 
       {/* Minimal Footer (Admin Link Removed) */}
-      <footer className="w-full px-4 md:px-6 py-12 border-t border-primary/5 mt-20 bg-background transition-colors duration-300">
+      <footer className={`w-full px-4 md:px-6 py-12 border-t border-primary/5 bg-background transition-colors duration-300 ${isHome ? '' : 'mt-20'}`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
           
           {/* Left: Logo & Copyright */}
