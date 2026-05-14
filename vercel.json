@@ -1,0 +1,64 @@
+{
+  "redirects": [
+    {
+      "source": "/evertree",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/jiscop",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/portfolio",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/seah",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/klac",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/daeguntech",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/ami",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/taeyang-3c",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/benda-sunkwang",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/plasma-pipette",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/mirae-tech-3d",
+      "destination": "/video",
+      "permanent": true
+    },
+    {
+      "source": "/blue-print-lab",
+      "destination": "/video",
+      "permanent": true
+    }
+  ]
+}
