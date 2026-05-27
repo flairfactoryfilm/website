@@ -1,6 +1,6 @@
 name: Keep Supabase Alive
 
-on:
+"on":
   schedule:
     # Mon, Thu at 03:00 UTC (KST 12:00 noon)
     - cron: '0 3 * * 1,4'
