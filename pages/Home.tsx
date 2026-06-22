@@ -62,6 +62,8 @@ const Home: React.FC = () => {
   return (
     <div className="w-full bg-background text-primary">
       
+      <h1 className="sr-only">플레어팩토리 (플레어 팩토리, Flair Factory Film) — 홍보영상·브랜드 영상 제작과 디자인, 수출바우처 홍보영상 제작</h1>
+
       {/* 1. Showreel Hero Section (Replaced Typography Hero) */}
       <section className="relative h-screen w-full overflow-hidden bg-black z-10">
         {/* Vimeo Background Iframe */}
@@ -81,7 +83,7 @@ const Home: React.FC = () => {
 
         {/* Scroll Indicator → Works 진입점 */}
         <Link
-          to="/works"
+          to="/video"
           className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 text-white/50 hover:text-white transition-colors duration-300 text-xs uppercase tracking-widest font-bold"
         >
           <span>View Works</span>
@@ -103,10 +105,10 @@ const Home: React.FC = () => {
          <div className="w-full h-px bg-primary/10 mb-24" />
          
          <div className="relative z-10 select-none mb-12">
-          <h1 className="text-[10vw] leading-[0.8] font-display font-bold tracking-tighter mix-blend-exclusion text-primary group-hover:opacity-80 transition-opacity duration-500">
+          <h2 className="text-[10vw] leading-[0.8] font-display font-bold tracking-tighter mix-blend-exclusion text-primary group-hover:opacity-80 transition-opacity duration-500">
             <div className="overflow-hidden"><span className="block">LET'S</span></div>
             <div className="overflow-hidden ml-[10vw]"><span className="block text-secondary/50 group-hover:text-primary transition-colors duration-500">TALK</span></div>
-          </h1>
+          </h2>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mt-16">
