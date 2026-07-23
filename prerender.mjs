@@ -2,7 +2,8 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 const DIST = path.resolve('dist');
 const ORIGIN = 'https://www.flairfactory.co.kr';
@@ -92,8 +93,9 @@ async function run() {
 
   const { server, port } = await startServer();
   const browser = await puppeteer.launch({
+    args: [...chromium.args, '--no-sandbox', '--disable-dev-shm-usage'],
+    executablePath: await chromium.executablePath(),
     headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage'],
   });
 
   const failures = [];
